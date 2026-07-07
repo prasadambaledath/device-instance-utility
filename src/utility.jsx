@@ -205,6 +205,13 @@ function Icon({ name, size = 14 }) {
           <circle cx="12" cy="12" r="3" />
         </svg>
       )
+    case 'arrowRight':
+      return (
+        <svg {...common}>
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      )
     default:
       return null
   }
@@ -766,7 +773,7 @@ function App() {
         <section className="col col-build">
           <div className="col-head build-head">
             <div className="build-head-text">
-              <h2>Assembly Templates &amp; Instances</h2>
+              <h2>Create Templates &amp; Instances</h2>
               <p>Each card is one group recipe — add devices, then generate instances.</p>
             </div>
             <div className="stat-chips build-stats">
@@ -800,8 +807,10 @@ function App() {
                 <div className="glyph">
                   <Icon name="grid" />
                 </div>
-                <p>
-                  <b>Import devices first.</b>
+                <p className="steps-to-create">
+                  <span>Import Devices</span> <Icon name="arrowRight" /> 
+                  <span>Create Templates</span> <Icon name="arrowRight" /> 
+                  <span>Generate Instances</span>
                 </p>
               </div>
             ) : (
@@ -1063,7 +1072,7 @@ function App() {
                             </div>
                           )}
 
-                          <div className="section-divider">Instances</div>
+                          <div className="section-divider">Generate Instances</div>
                           <div className="gen-bar">
                             <span>Add</span>
                             <input

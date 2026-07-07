@@ -170,6 +170,9 @@ tr:last-child td{border-bottom:none;}
 .empty .glyph{margin-bottom:10px;display:flex;justify-content:center;color:var(--border-strong);}
 .empty p{margin:3px 0;font-size:12.5px;}
 
+.steps-to-create{display:flex;align-items:center;gap:6px;justify-content:center;}
+.steps-to-create span{font-size:16px;}
+
 /* ---------- Preview column ---------- */
 .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
 .summary-cell{border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;background:var(--header-row);}
