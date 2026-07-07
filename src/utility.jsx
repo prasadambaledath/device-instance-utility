@@ -697,7 +697,7 @@ function App() {
                 <p>
                   <b>Nothing imported yet.</b>
                 </p>
-                <p>Use Import Devices beside Save &amp; Exit to pull PRJ-48213 records.</p>
+                <p>Use Import Devices beside Save &amp; Exit to pull device records.</p>
               </div>
             ) : (
               <>
