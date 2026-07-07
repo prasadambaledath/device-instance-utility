@@ -15,7 +15,7 @@ function Header() {
         </Link>
         <span className="tool-divider" />
         <span className="tool-name">
-          Assembly Builder<span className="tag">POC</span>
+          Device Instance Utility<span className="tag">POC</span>
         </span>
       </div>
     </div>
