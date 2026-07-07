@@ -1,0 +1,67 @@
+.topbar {
+  background: #054163;
+  color: #fff;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.waffle {
+  display: flex;
+  flex-wrap: wrap;
+  width: 16px;
+  height: 16px;
+  gap: 2px;
+  opacity: 0.85;
+}
+
+.waffle span {
+  width: 3px;
+  height: 3px;
+  background: #fff;
+  border-radius: 1px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand .logo {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand .logo .i {
+  color: #cc2200;
+}
+
+.brand .tool-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.brand .tool-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.brand .tool-name .tag {
+  font-size: 9.5px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 6px;
+  letter-spacing: 0.4px;
+  vertical-align: middle;
+}

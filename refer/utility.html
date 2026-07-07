@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Assembly Builder — Oracle PPM Import | iTrac POC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#054163; --primary-hover:#033349; --primary-tint:#e7eef3;
+  --accent:#cc2200;
+  --danger:#bf311a; --danger-tint:#fbe9e5;
+  --warning:#b4720a; --warning-tint:#fff3cd;
+  --success:#1e7d29; --success-tint:#e6f4e8;
+  --ink:#201f1e; --ink-soft:#605e5c;
+  --border:#e1dfdd; --border-strong:#c8c6c4;
+  --bg:#f5f5f5; --surface:#ffffff; --surface-sunken:#f3f2f1;
+  --header-row:#eef2f4;
+  --radius-sm:2px; --radius:4px; --radius-lg:6px;
+  --sans:'Roboto',-apple-system,BlinkMacSystemFont,'Segoe UI',Oxygen,Ubuntu,Cantarell,'Fira Sans','Droid Sans','Helvetica Neue',sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;height:100%;}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;display:flex;flex-direction:column;min-height:100vh;-webkit-font-smoothing:antialiased;}
+button{font-family:var(--sans);cursor:pointer;}
+input,select{font-family:var(--sans);}
+svg{display:block;flex-shrink:0;}
+
+/* ---------- Tier 1: brand bar ---------- */
+.topbar{background:var(--primary);color:#fff;padding:8px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;flex-shrink:0;}
+.waffle{display:flex;flex-wrap:wrap;width:16px;height:16px;gap:2px;opacity:0.85;}
+.waffle span{width:3px;height:3px;background:#fff;border-radius:1px;}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand .logo{font-size:19px;font-weight:700;letter-spacing:0.2px;}
+.brand .logo .i{color:var(--accent);}
+.brand .tool-divider{width:1px;height:20px;background:rgba(255,255,255,0.25);}
+.brand .tool-name{font-size:14px;font-weight:600;}
+.brand .tool-name .tag{font-size:9.5px;font-weight:700;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.3);border-radius:3px;padding:1px 5px;margin-left:6px;letter-spacing:0.4px;vertical-align:middle;}
+.prj-badge{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;}
+.topbar .import-block{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.topbar .stamp{font-size:11px;color:#c9dbe6;}
+.stat-chips{display:flex;gap:8px;flex-wrap:wrap;}
+.stat-chip{background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:4px 11px;font-size:11px;display:flex;gap:6px;align-items:baseline;}
+.stat-chip b{font-size:13px;font-weight:700;}
+.stat-chip.warn{background:rgba(180,114,10,0.35);border-color:rgba(180,114,10,0.55);}
+.stat-chip.bad{background:rgba(191,49,26,0.4);border-color:rgba(191,49,26,0.6);}
+
+/* ---------- Tier 2: page sub-header ---------- */
+.subheader{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;flex-shrink:0;}
+.subheader .crumbs{font-size:11.5px;color:var(--ink-soft);margin-bottom:3px;}
+.subheader .crumbs .sep{margin:0 5px;color:var(--border-strong);}
+.subheader h1{margin:0;font-size:19px;font-weight:700;color:var(--ink);}
+.subheader .actions{display:flex;gap:8px;align-items:center;}
+
+/* ---------- Buttons ---------- */
+.btn{border:1px solid var(--primary);background:var(--primary);color:#fff;padding:7px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;transition:background .1s;}
+.btn:hover{background:var(--primary-hover);}
+.btn:disabled{background:var(--surface-sunken);border-color:var(--surface-sunken);color:#a19f9d;cursor:not-allowed;}
+.btn.secondary{background:#fff;color:var(--ink);border-color:var(--border-strong);}
+.btn.secondary:hover{background:var(--surface-sunken);}
+.btn.secondary:disabled{background:#fff;color:#c8c6c4;border-color:var(--border);}
+.btn.on-dark{background:#fff;color:var(--primary);border-color:#fff;}
+.btn.on-dark:hover{background:#e9eff3;}
+.btn.small{padding:4px 10px;font-size:12px;}
+.btn.danger{background:#fff;border-color:var(--danger);color:var(--danger);}
+.btn.danger:hover{background:var(--danger-tint);}
+.btn.icon{padding:5px 6px;}
+.btn.block{width:100%;justify-content:center;}
+
+/* ---------- Workspace grid ---------- */
+.workspace{display:grid;grid-template-columns:300px 1fr 360px;flex:1;min-height:0;}
+.col{overflow-y:auto;}
+.col-library{border-right:1px solid var(--border);background:var(--surface);}
+.col-build{background:var(--bg);}
+.col-preview{border-left:1px solid var(--border);background:var(--surface);}
+.col-head{position:sticky;top:0;background:inherit;border-bottom:1px solid var(--border);padding:12px 16px;z-index:5;}
+.col-head h2{margin:0;font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--primary);}
+.col-head p{margin:3px 0 0;font-size:11.5px;color:var(--ink-soft);}
+.col-body{padding:12px 14px 40px;}
+
+/* ---------- Library rows ---------- */
+.search-bar{position:relative;margin-bottom:10px;}
+.search-bar svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--ink-soft);}
+.search-bar input{width:100%;padding:7px 10px 7px 30px;border:1px solid var(--border-strong);border-radius:var(--radius);font-size:13px;}
+.search-bar input:focus{outline:none;border-color:var(--primary);}
+.lib-row{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);margin-bottom:8px;padding:10px 11px;}
+.lib-row.hidden-row{opacity:0.45;}
+.lib-row .r1{display:flex;justify-content:space-between;gap:6px;align-items:flex-start;}
+.lib-row .r1 .desc{font-weight:600;font-size:13px;}
+.lib-row .r1 .mm{font-size:11.5px;color:var(--ink-soft);margin-top:1px;}
+.lib-row .avail{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--success-tint);color:var(--success);white-space:nowrap;}
+.lib-row .avail.low{background:var(--warning-tint);color:var(--warning);}
+.lib-row .avail.negative{background:var(--danger-tint);color:var(--danger);}
+.lib-row .r2{display:flex;gap:6px;margin-top:8px;align-items:center;}
+.lib-row select{flex:1;padding:5px 6px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:12px;background:#fff;}
+.lib-row .r3{display:flex;justify-content:flex-end;align-items:center;margin-top:7px;}
+.lib-row .hide-line{font-size:11px;color:var(--ink-soft);display:flex;align-items:center;gap:5px;cursor:pointer;}
+.lib-row .qtybar{height:4px;border-radius:2px;background:var(--surface-sunken);margin-top:7px;overflow:hidden;}
+.lib-row .qtybar .fill{height:100%;background:var(--success);}
+.lib-row .qtybar .fill.low{background:var(--warning);}
+.lib-row .qtybar .fill.negative{background:var(--danger);}
+.no-subclass-note{font-size:10.5px;color:var(--danger);margin-top:6px;}
+
+/* ---------- Build column ---------- */
+.new-template-bar{display:flex;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end;}
+.new-template-bar .field{flex:1;min-width:140px;}
+.new-template-bar label{font-size:10.5px;text-transform:uppercase;color:var(--ink-soft);font-weight:700;display:block;margin-bottom:4px;letter-spacing:0.3px;}
+.new-template-bar input, .new-template-bar select{width:100%;padding:7px 8px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:13px;}
+.new-template-bar input:focus, .new-template-bar select:focus{outline:none;border-color:var(--primary);}
+.inline-err{color:var(--danger);font-size:11.5px;margin-top:5px;width:100%;display:flex;align-items:center;gap:5px;}
+
+.tpl-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;overflow:hidden;}
+.tpl-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--header-row);gap:10px;flex-wrap:wrap;}
+.tpl-head .left{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.tpl-head .ref{font-weight:700;color:var(--primary);font-size:13.5px;letter-spacing:0.2px;}
+.tpl-head .desc{font-size:12.5px;color:var(--ink-soft);}
+.tpl-body{padding:14px 16px;}
+
+.devlist-empty{border:1px dashed var(--border-strong);border-radius:var(--radius);padding:16px;text-align:center;color:var(--ink-soft);font-size:12.5px;margin-bottom:10px;}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th{text-align:left;font-size:11px;font-weight:700;color:var(--primary);border-bottom:1px solid var(--border);padding:7px 9px;background:var(--header-row);}
+td{padding:8px 9px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tbody tr:hover td{background:#fafbfc;}
+tr:last-child td{border-bottom:none;}
+.qty{font-weight:600;}
+.qty.negative{color:var(--danger);}
+.small-input{width:56px !important;padding:5px !important;text-align:center;}
+.name-input{width:100%;padding:5px 7px !important;border:1px solid transparent;border-radius:var(--radius-sm);font-size:12.5px;background:transparent;}
+.name-input:hover{border-color:var(--border-strong);}
+.name-input:focus{border-color:var(--primary);outline:none;background:#fff;}
+.name-input.err{border-color:var(--danger);color:var(--danger);background:var(--danger-tint);}
+
+.add-device-row{margin:12px 0;}
+.add-panel{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);margin-top:10px;padding:10px;}
+.add-panel-search{position:relative;margin-bottom:8px;}
+.add-panel-search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--ink-soft);}
+.add-panel-search input{width:100%;padding:6px 10px 6px 30px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:12.5px;background:#fff;}
+.add-panel-search input:focus{outline:none;border-color:var(--primary);}
+.add-panel-list{max-height:230px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+.add-panel-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 9px;}
+.add-panel-row .apr-info{flex:1;min-width:0;}
+.add-panel-row .apr-desc{font-weight:600;font-size:12.5px;}
+.add-panel-row .apr-mm{font-size:11px;color:var(--ink-soft);}
+.add-panel-row .apr-avail{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--success-tint);color:var(--success);white-space:nowrap;}
+.add-panel-row .apr-avail.low{background:var(--warning-tint);color:var(--warning);}
+.add-panel-row .apr-avail.negative{background:var(--danger-tint);color:var(--danger);}
+.add-panel-empty{font-size:12px;color:var(--ink-soft);text-align:center;padding:14px;}
+
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:3px;}
+.badge.info{background:var(--primary-tint);color:var(--primary);}
+.badge.warning{background:var(--warning-tint);color:var(--warning);}
+.badge.danger{background:var(--danger-tint);color:var(--danger);}
+.badge.success{background:var(--success-tint);color:var(--success);}
+.badge.gray{background:var(--surface-sunken);color:var(--ink-soft);}
+
+.max-hint{font-size:11.5px;color:var(--ink-soft);margin-top:9px;}
+.max-hint b{color:var(--primary);}
+.override-note{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--warning);background:var(--warning-tint);border-radius:var(--radius-sm);padding:8px 10px;margin-bottom:10px;flex-wrap:wrap;}
+.checkbox-line{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-soft);cursor:pointer;}
+
+.section-divider{display:flex;align-items:center;gap:8px;margin:16px 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:0.4px;color:var(--ink-soft);font-weight:700;}
+.section-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+.gen-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;}
+.gen-bar input[type=number]{width:64px;padding:6px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:12.5px;text-align:center;}
+.gen-bar span{font-size:12px;color:var(--ink-soft);}
+
+.expand-toggle{cursor:pointer;user-select:none;display:inline-flex;color:var(--ink-soft);}
+.child-table{background:var(--bg);padding:8px 8px 8px 30px;}
+.child-table table{background:#fff;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.child-table th, .child-table td{padding:6px 9px;font-size:11.5px;}
+
+.empty{padding:34px 16px;text-align:center;color:var(--ink-soft);}
+.empty .glyph{margin-bottom:10px;display:flex;justify-content:center;color:var(--border-strong);}
+.empty p{margin:3px 0;font-size:12.5px;}
+
+/* ---------- Preview column ---------- */
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.summary-cell{border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;background:var(--header-row);}
+.summary-cell .num{font-size:20px;font-weight:700;color:var(--primary);}
+.summary-cell.warn .num{color:var(--warning);}
+.summary-cell.bad .num{color:var(--danger);}
+.summary-cell .lbl{font-size:10px;text-transform:uppercase;color:var(--ink-soft);letter-spacing:0.3px;margin-top:1px;}
+
+.preview-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px;gap:8px;}
+.preview-row:last-child{border-bottom:none;}
+.preview-row .pname{flex:1;}
+.preview-row .pname b{font-weight:700;}
+.preview-row .ptag{font-size:10.5px;color:var(--ink-soft);margin-top:1px;}
+.pagination{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-soft);margin-top:10px;flex-wrap:wrap;}
+.pagination select{padding:4px 5px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);font-size:11.5px;}
+.pg-btn{border:1px solid var(--border-strong);background:#fff;padding:4px 9px;border-radius:var(--radius-sm);color:var(--ink);display:inline-flex;}
+.pg-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.sticky-cta{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 14px;margin:0 -14px;}
+
+.toast-wrap{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:999;}
+
+.th-action{background:transparent;border:none;color:var(--primary);padding:2px 4px;border-radius:3px;cursor:pointer;margin-left:4px;vertical-align:middle;display:inline-flex;}
+.th-action:hover{background:var(--primary-tint);}
+.th-action:disabled{color:var(--border-strong);cursor:not-allowed;}
+.th-action:disabled:hover{background:transparent;}
+
+/* ---------- Modal (Auto-Number Friendly Names) ---------- */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,20,20,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;}
+.modal-card{background:var(--surface);border-radius:var(--radius-lg);width:440px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+.modal-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.modal-head h3{margin:0;font-size:15px;font-weight:700;color:var(--ink);}
+.modal-body{padding:16px 18px;}
+.modal-hint{margin:0 0 14px;font-size:12.5px;color:var(--ink-soft);}
+.modal-row{display:flex;gap:12px;margin-bottom:14px;}
+.modal-field{flex:1;}
+.modal-field label{font-size:10.5px;text-transform:uppercase;color:var(--ink-soft);font-weight:700;display:block;margin-bottom:4px;letter-spacing:0.3px;}
+.modal-field input{width:100%;padding:7px 9px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:13px;}
+.modal-field input:focus{outline:none;border-color:var(--primary);}
+.modal-advanced-toggle{font-size:12px;color:var(--primary);font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-bottom:14px;user-select:none;}
+.modal-preview{background:var(--header-row);border-radius:var(--radius-sm);padding:10px 12px;font-size:12.5px;color:var(--ink);}
+.modal-preview .lbl{font-size:10px;text-transform:uppercase;color:var(--ink-soft);font-weight:700;margin-bottom:4px;letter-spacing:0.3px;}
+.modal-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.toast{background:var(--ink);color:#fff;padding:11px 15px;border-radius:var(--radius);font-size:12.5px;display:flex;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(0,0,0,0.2);max-width:320px;}
+.toast.success{background:var(--success);}
+.toast.error{background:var(--danger);}
+
+@media (max-width: 1000px){
+  .workspace{grid-template-columns:1fr;}
+  .col{overflow-y:visible;}
+  .col-library, .col-build, .col-preview{border:none;border-bottom:1px solid var(--border);}
+  .col-head{position:static;}
+  .sticky-cta{position:static;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <span class="waffle"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+    <span class="logo"><span class="i">i</span>Trac</span>
+    <span class="tool-divider"></span>
+    <span class="tool-name">Assembly Builder<span class="tag">POC</span></span>
+  </div>
+  <div class="prj-badge">PRJ-48213 · Campus Security Upgrade</div>
+  <div class="stat-chips" id="statChips"></div>
+  <div class="import-block">
+    <div style="text-align:right;">
+      <div class="stamp" id="importStamp">Not yet imported</div>
+    </div>
+    <button class="btn on-dark" onclick="importDevices()" id="importBtn"></button>
+  </div>
+</div>
+
+<div class="subheader">
+  <div>
+    <div class="crumbs">Manage Devices<span class="sep">›</span>Bulk Add Devices<span class="sep">›</span>Add (Oracle PPM)</div>
+    <h1>Assembly Builder</h1>
+  </div>
+  <div class="actions">
+    <button class="btn secondary" onclick="toast('Progress saved. You can exit and resume this configuration later.','success')" id="saveExitBtn"></button>
+  </div>
+</div>
+
+<div class="workspace">
+
+  <!-- LEFT: DEVICE LIBRARY -->
+  <aside class="col col-library">
+    <div class="col-head">
+      <h2>Device Library</h2>
+      <p>Imported from Oracle PPM</p>
+    </div>
+    <div class="col-body" id="libraryBody"></div>
+  </aside>
+
+  <!-- CENTER: BUILD CANVAS -->
+  <section class="col col-build">
+    <div class="col-head">
+      <h2>Assembly Templates &amp; Instances</h2>
+      <p>Each card is one group recipe — add devices, then generate instances below.</p>
+    </div>
+    <div class="col-body" id="buildBody"></div>
+  </section>
+
+  <!-- RIGHT: LIVE PREVIEW -->
+  <aside class="col col-preview">
+    <div class="col-head">
+      <h2>Live Preview</h2>
+      <p>Every device that will land in iTrac</p>
+    </div>
+    <div class="col-body" id="previewBody"></div>
+  </aside>
+
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<div id="modalRoot"></div>
+
+<script>
+/* ============================= ICONS (inline, no external deps) ============================= */
+function svg(inner, size){ return `<svg width="${size||16}" height="${size||16}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`; }
+const ICONS = {
+  search: svg('<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>', 14),
+  download: svg('<path d="M12 3v12"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="5" y1="21" x2="19" y2="21"></line>', 14),
+  check: svg('<polyline points="20 6 9 17 4 12"></polyline>', 13),
+  alert: svg('<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>', 13),
+  chevronRight: svg('<polyline points="9 18 15 12 9 6"></polyline>', 13),
+  chevronDown: svg('<polyline points="6 9 12 15 18 9"></polyline>', 13),
+  plus: svg('<line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>', 12),
+  x: svg('<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>', 12),
+  arrowUp: svg('<line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline>', 12),
+  arrowDown: svg('<line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline>', 12),
+  lock: svg('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path>', 11),
+  box: svg('<path d="M20.91 8.84 8.56 2.23a1.93 1.93 0 0 0-1.81 0L3.1 4.13a2.12 2.12 0 0 0-.05 3.69l12.22 6.93a2 2 0 0 0 1.94 0L21 12.51a2.12 2.12 0 0 0-.09-3.67Z"></path><path d="m3.09 8.84 12.35-6.61a1.93 1.93 0 0 1 1.81 0l3.65 1.9a2.12 2.12 0 0 1 .1 3.69L8.73 14.75a2 2 0 0 1-1.94 0L3 12.51a2.12 2.12 0 0 1 .09-3.67Z"></path><line x1="12" y1="22" x2="12" y2="13"></line><path d="M20 13v3.87a2.06 2.06 0 0 1-1.11 1.83l-6 3.08a1.93 1.93 0 0 1-1.78 0l-6-3.08A2.06 2.06 0 0 1 4 16.87V13"></path>', 30),
+  grid: svg('<rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect>', 30),
+  eye: svg('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"></path><circle cx="12" cy="12" r="3"></circle>', 30),
+  hash: svg('<line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line>', 13),
+};
+
+/* ============================= DATA / STATE ============================= */
+const SUBCLASS_OPTIONS = ['Reader','Electric Lock','Door Contact','Motion Sensor','IP Camera','Access Panel','Glass Break Sensor','Emergency Button'];
+const PARENT_SUBCLASS_OPTIONS = ['Door Assembly','Access Point','Security Zone'];
+
+const PPM_SEED = [
+  {id:'d1', description:'Proximity Card Reader', manufacturer:'HID Global', model:'ProxPro-125', qty:40},
+  {id:'d2', description:'Electric Strike Lock', manufacturer:'Von Duprin', model:'6112-EL', qty:20},
+  {id:'d3', description:'Door Position Contact', manufacturer:'GE Security', model:'DPS-200', qty:20},
+  {id:'d4', description:'Request-to-Exit PIR', manufacturer:'Bosch', model:'RTE-450', qty:20},
+  {id:'d5', description:'IP Dome Camera', manufacturer:'Axis', model:'P3268-LV', qty:15},
+  {id:'d6', description:'Access Control Panel', manufacturer:'Mercury Security', model:'MR52', qty:8},
+  {id:'d7', description:'Glass Break Sensor', manufacturer:'Honeywell', model:'FG-1625', qty:10},
+  {id:'d8', description:'Duress / Panic Button', manufacturer:'STI', model:'SS2005', qty:12},
+];
+
+let state = {
+  imported:false, importedAt:null,
+  ppm:[], templates:[], instances:[],
+  seq:1, page:1, pageSize:8,
+  openAddPanelTid:null, addSearch:'',
+  numberingModal:null,
+};
+
+function esc(s){ return (s===undefined||s===null?'':String(s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function toast(msg, type='default'){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type==='success'?'success':type==='error'?'error':'');
+  el.innerHTML = (type==='success'?ICONS.check:type==='error'?ICONS.alert:'') + '<span>'+msg+'</span>';
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 3200);
+}
+
+/* Re-runs a render function while preserving focus/cursor on the active input (search boxes re-render on every keystroke). */
+function reRenderPreserveFocus(renderFn){
+  const active = document.activeElement;
+  const id = active && active.id;
+  const selStart = active && typeof active.selectionStart === 'number' ? active.selectionStart : null;
+  const selEnd = active && typeof active.selectionEnd === 'number' ? active.selectionEnd : null;
+  renderFn();
+  if(id){
+    const el = document.getElementById(id);
+    if(el){ el.focus(); if(selStart!==null) el.setSelectionRange(selStart, selEnd); }
+  }
+}
+
+function render(){
+  renderTopStats();
+  renderLibrary();
+  renderBuild();
+  renderPreview();
+  renderModal();
+}
+
+/* ============================= TOP STATS ============================= */
+function renderTopStats(){
+  document.getElementById('importBtn').innerHTML = ICONS.download + ' Import Devices';
+  document.getElementById('saveExitBtn').innerHTML = 'Save &amp; Exit';
+  document.getElementById('importStamp').textContent = state.imported ? 'Last imported '+state.importedAt.toLocaleTimeString() : 'Not yet imported';
+  const rows = buildPreviewRows();
+  const pending = rows.filter(r=>r.status==='new').length;
+  const dupes = groupIdDuplicates();
+  const chips = [
+    ['PPM devices', state.ppm.length],
+    ['Templates', state.templates.length],
+    ['Instances', state.instances.length],
+    ['Pending create', pending, pending>0?'warn':''],
+  ];
+  if(dupes.size>0) chips.push(['Duplicate IDs', dupes.size, 'bad']);
+  document.getElementById('statChips').innerHTML = chips.map(c=>
+    `<div class="stat-chip ${c[2]||''}"><b>${c[1]}</b><span>${c[0]}</span></div>`
+  ).join('');
+}
+
+/* ============================= HELPERS ============================= */
+function usedQtyForDevice(deviceId, excludeTemplateId=null){
+  let used = 0;
+  state.templates.forEach(t=>{
+    if(t.id===excludeTemplateId) return;
+    const entry = t.devices.find(d=>d.deviceId===deviceId);
+    if(!entry) return;
+    const instCount = state.instances.filter(i=>i.templateId===t.id).length;
+    used += entry.qtyPerInstance * instCount;
+  });
+  return used;
+}
+function maxCreatableFor(t){
+  if(!t || t.devices.length===0) return 0;
+  let maxInst = Infinity;
+  t.devices.forEach(entry=>{
+    const src = state.ppm.find(d=>d.id===entry.deviceId);
+    if(!src){ maxInst = 0; return; }
+    const used = usedQtyForDevice(entry.deviceId, t.id);
+    const avail = src.qty - used;
+    maxInst = Math.min(maxInst, Math.floor(avail / entry.qtyPerInstance));
+  });
+  return maxInst===Infinity?0:maxInst;
+}
+function groupIdDuplicates(){
+  const counts = {};
+  state.instances.forEach(i=>{ counts[i.groupId]=(counts[i.groupId]||0)+1; });
+  return new Set(Object.keys(counts).filter(k=>counts[k]>1));
+}
+function availClass(avail, total){
+  if(avail<0) return 'negative';
+  if(total>0 && avail/total < 0.2) return 'low';
+  return '';
+}
+
+/* ============================= IMPORT ============================= */
+function importDevices(){
+  state.ppm = PPM_SEED.map(d=>({...d, subclass:'', hidden:false}));
+  state.imported = true;
+  state.importedAt = new Date();
+  render();
+  toast('Imported '+state.ppm.length+' device records from Oracle PPM.', 'success');
+}
+
+/* ============================= LIBRARY (LEFT) ============================= */
+function renderLibrary(){
+  const body = document.getElementById('libraryBody');
+  if(!state.imported){
+    body.innerHTML = `<div class="empty"><div class="glyph">${ICONS.box}</div><p><b>Nothing imported yet.</b></p><p>Use "Import Devices" above to pull PRJ-48213 material records.</p></div>`;
+    return;
+  }
+  const q = (document.getElementById('libSearch')?.value || '').toLowerCase();
+  const filtered = state.ppm.filter(d => !q || d.description.toLowerCase().includes(q) || d.manufacturer.toLowerCase().includes(q) || d.model.toLowerCase().includes(q));
+
+  body.innerHTML = `
+    <div class="search-bar">${ICONS.search}<input type="text" id="libSearch" placeholder="Search description, make, model…" value="${esc(q)}" oninput="reRenderPreserveFocus(renderLibrary)"></div>
+    ${filtered.map(d=>{
+      const used = usedQtyForDevice(d.id);
+      const avail = d.qty - used;
+      const pct = Math.max(0, Math.min(100, (avail/d.qty)*100));
+      const cls = availClass(avail, d.qty);
+      return `
+      <div class="lib-row ${d.hidden?'hidden-row':''}">
+        <div class="r1">
+          <div>
+            <div class="desc">${esc(d.description)}</div>
+            <div class="mm">${esc(d.manufacturer)} · ${esc(d.model)}</div>
+          </div>
+          <div class="avail ${cls}">${avail} / ${d.qty}</div>
+        </div>
+        <div class="qtybar"><div class="fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="r2">
+          <select onchange="setSubclass('${d.id}', this.value)">
+            <option value="">— assign subclass —</option>
+            ${SUBCLASS_OPTIONS.map(s=>`<option value="${s}" ${d.subclass===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        ${!d.subclass ? `<div class="no-subclass-note">${ICONS.alert} Assign a subclass before this device can be added to a template.</div>` : ''}
+        <div class="r3">
+          <label class="hide-line"><input type="checkbox" ${d.hidden?'checked':''} onchange="toggleHide('${d.id}', this.checked)"> Hide from this project</label>
+        </div>
+      </div>`;
+    }).join('') || `<div class="empty"><p>No devices match "${esc(q)}".</p></div>`}
+  `;
+}
+function setSubclass(id, val){
+  const d = state.ppm.find(x=>x.id===id); d.subclass = val;
+  render();
+  toast(val ? `Subclass "${val}" assigned to ${d.description}.` : 'Subclass cleared.');
+}
+function toggleHide(id, val){
+  state.ppm.find(x=>x.id===id).hidden = val;
+  render();
+}
+
+/* ============================= BUILD (CENTER) ============================= */
+function renderBuild(){
+  const body = document.getElementById('buildBody');
+  if(!state.imported){
+    body.innerHTML = `<div class="empty"><div class="glyph">${ICONS.grid}</div><p><b>Import devices first.</b></p></div>`;
+    return;
+  }
+  body.innerHTML = `
+    <div class="new-template-bar">
+      <div class="field"><label>Reference</label><input type="text" id="ntRef" placeholder="DOOR-T1"></div>
+      <div class="field"><label>Description</label><input type="text" id="ntDesc" placeholder="Standard Single Door"></div>
+      <div class="field"><label>Parent subclass</label>
+        <select id="ntSubclass"><option value="">Select…</option>${PARENT_SUBCLASS_OPTIONS.map(s=>`<option>${s}</option>`).join('')}</select>
+      </div>
+      <button class="btn" onclick="createTemplate()">${ICONS.plus} New Template</button>
+      <div class="inline-err" id="ntError"></div>
+    </div>
+    <div id="templateList"></div>
+  `;
+  renderTemplateList();
+}
+function createTemplate(){
+  const ref = document.getElementById('ntRef').value.trim();
+  const desc = document.getElementById('ntDesc').value.trim();
+  const subclass = document.getElementById('ntSubclass').value;
+  const err = document.getElementById('ntError');
+  err.innerHTML = '';
+  if(!ref || !desc || !subclass){ err.innerHTML = ICONS.alert+' Reference, description and parent subclass are all required.'; return; }
+  if(state.templates.some(t=>t.ref.toLowerCase()===ref.toLowerCase())){ err.innerHTML = ICONS.alert+' Reference must be unique within the project.'; return; }
+  if(state.templates.some(t=>t.description.toLowerCase()===desc.toLowerCase())){ err.innerHTML = ICONS.alert+' Description must be unique within the project.'; return; }
+  state.templates.push({id:'t'+(state.seq++), ref, description:desc, parentSubclass:subclass, locked:false, devices:[]});
+  document.getElementById('ntRef').value=''; document.getElementById('ntDesc').value=''; document.getElementById('ntSubclass').value='';
+  render();
+  toast('Template "'+ref+'" created — click "Add Device" on the card to build it out.', 'success');
+}
+
+function renderTemplateList(){
+  const list = document.getElementById('templateList');
+  if(state.templates.length===0){
+    list.innerHTML = `<div class="empty"><div class="glyph">${ICONS.grid}</div><p><b>No templates yet.</b></p><p>Create one above, then add devices to it.</p></div>`;
+    return;
+  }
+  const dupes = groupIdDuplicates();
+  list.innerHTML = state.templates.map(t=>{
+    const instCount = state.instances.filter(i=>i.templateId===t.id).length;
+    const max = maxCreatableFor(t);
+    return `
+    <div class="tpl-card">
+      <div class="tpl-head">
+        <div class="left">
+          <span class="ref">${esc(t.ref)}</span>
+          <span class="desc">${esc(t.description)}</span>
+          <span class="badge gray">${esc(t.parentSubclass)}</span>
+          ${t.locked ? `<span class="badge warning">${ICONS.lock} Locked</span>` : ''}
+          <span class="badge info">${instCount} instance(s)</span>
+        </div>
+        <button class="btn icon small danger" onclick="deleteTemplate('${t.id}')" title="Delete template">${ICONS.x}</button>
+      </div>
+      <div class="tpl-body">
+        ${t.locked ? `<div class="override-note">${ICONS.alert} Locked — editing recreates existing instances and loses captured install/test data. <button class="btn small secondary" onclick="unlockTemplate('${t.id}')">Unlock anyway</button></div>` : ''}
+
+        ${t.devices.length===0
+          ? `<div class="devlist-empty">No devices added yet. Click "Add Device" below to search the imported PPM library.</div>`
+          : renderTemplateDeviceTable(t)}
+
+        <div class="add-device-row">
+          <button class="btn small secondary" ${t.locked?'disabled':''} onclick="toggleTemplateAddPanel('${t.id}')">${ICONS.plus} ${state.openAddPanelTid===t.id ? 'Close Search' : 'Add Device'}</button>
+        </div>
+        ${state.openAddPanelTid===t.id ? renderTemplateAddPanel(t) : ''}
+
+        <div class="section-divider">Instances</div>
+        <div class="gen-bar">
+          <span>Add</span>
+          <input type="number" id="genCount-${t.id}" min="1" value="1" ${t.locked?'disabled':''}>
+          <span>instance(s)</span>
+          <button class="btn small" ${t.locked||t.devices.length===0?'disabled':''} onclick="generateInstances('${t.id}')">Generate</button>
+          <label class="checkbox-line"><input type="checkbox" id="genOverride-${t.id}" ${t.locked?'disabled':''}> Override PPM limit</label>
+        </div>
+        <div class="max-hint">Up to <b>${max}</b> more instance(s) fit within remaining PPM quantity.</div>
+        <div class="inline-err" id="genError-${t.id}"></div>
+
+        ${renderInstanceTable(t, dupes)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTemplateDeviceTable(t){
+  const rows = t.devices.map((entry, idx)=>{
+    const src = state.ppm.find(d=>d.id===entry.deviceId);
+    return `<tr>
+      <td>${idx+1}</td>
+      <td>${src ? esc(src.description) : `<span style="color:var(--danger)">Removed from PPM</span>`}</td>
+      <td><input class="name-input" type="text" value="${esc(entry.friendlyName)}" onchange="updateFriendlyName('${t.id}','${entry.uid}', this.value)" ${t.locked?'disabled':''}></td>
+      <td><input class="small-input" type="number" min="1" value="${entry.qtyPerInstance}" onchange="updateQty('${t.id}','${entry.uid}', this.value)" ${t.locked?'disabled':''}></td>
+      <td>
+        <button class="btn icon small secondary" ${idx===0||t.locked?'disabled':''} onclick="moveDevice('${t.id}','${entry.uid}',-1)" title="Move up">${ICONS.arrowUp}</button>
+        <button class="btn icon small secondary" ${idx===t.devices.length-1||t.locked?'disabled':''} onclick="moveDevice('${t.id}','${entry.uid}',1)" title="Move down">${ICONS.arrowDown}</button>
+        <button class="btn icon small danger" ${t.locked?'disabled':''} onclick="removeDeviceFromTemplate('${t.id}','${entry.uid}')" title="Remove">${ICONS.x}</button>
+      </td>
+    </tr>`;
+  }).join('');
+  return `<table><thead><tr><th>#</th><th>Source Device</th><th>Friendly Name</th><th>Qty/Inst</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function updateFriendlyName(tid, uid, val){ state.templates.find(x=>x.id===tid).devices.find(d=>d.uid===uid).friendlyName = val; render(); }
+function updateQty(tid, uid, val){ state.templates.find(x=>x.id===tid).devices.find(d=>d.uid===uid).qtyPerInstance = Math.max(1, parseInt(val)||1); render(); }
+
+/* ---- Auto-Number Group IDs modal (bulk-renumber instances instead of editing each Group ID by hand) ---- */
+function openNumberingModal(tid){
+  const t = state.templates.find(x=>x.id===tid);
+  const instances = state.instances.filter(i=>i.templateId===tid);
+  if(!t || instances.length===0) return;
+  state.numberingModal = { tid, prefix:t.ref+'-', start:1, increment:1, digits:2, suffix:'', advancedOpen:false };
+  renderModal();
+}
+function closeNumberingModal(){ state.numberingModal = null; renderModal(); }
+function toggleNumberingAdvanced(){ if(!state.numberingModal) return; state.numberingModal.advancedOpen = !state.numberingModal.advancedOpen; renderModal(); }
+function updateNumberingField(field, val){
+  if(!state.numberingModal) return;
+  if(field==='prefix' || field==='suffix'){ state.numberingModal[field] = val; }
+  else if(field==='increment'){ state.numberingModal.increment = Math.max(1, parseInt(val)||1); }
+  else { state.numberingModal[field] = Math.max(0, parseInt(val)||0); }
+  reRenderPreserveFocus(renderModal);
+}
+function padNumber(n, digits){ return digits>0 ? String(n).padStart(digits,'0') : String(n); }
+function applyNumbering(){
+  const m = state.numberingModal;
+  if(!m) return;
+  const t = state.templates.find(x=>x.id===m.tid);
+  const instances = state.instances.filter(i=>i.templateId===m.tid);
+  if(!t || instances.length===0){ closeNumberingModal(); return; }
+  let n = m.start;
+  instances.forEach(inst=>{
+    inst.groupId = (m.prefix||'') + padNumber(n, m.digits) + (m.suffix||'');
+    n += m.increment;
+  });
+  state.numberingModal = null;
+  render();
+  toast(`Renumbered ${instances.length} instance(s) in ${t.ref}. Review the Live Preview for any duplicate Group IDs.`, 'success');
+}
+function renderModal(){
+  const root = document.getElementById('modalRoot');
+  if(!root) return;
+  const m = state.numberingModal;
+  if(!m){ root.innerHTML = ''; return; }
+  const t = state.templates.find(x=>x.id===m.tid);
+  const instances = t ? state.instances.filter(i=>i.templateId===m.tid) : [];
+  if(!t || instances.length===0){ state.numberingModal = null; root.innerHTML = ''; return; }
+
+  const previewCount = Math.min(instances.length, 3);
+  const previewNames = [];
+  let n = m.start;
+  for(let i=0;i<previewCount;i++){ previewNames.push(esc((m.prefix||'') + padNumber(n, m.digits) + (m.suffix||''))); n += m.increment; }
+  const previewText = previewNames.join(', ') + (instances.length>3 ? ', …' : '');
+
+  root.innerHTML = `
+    <div class="modal-overlay" onclick="closeNumberingModal()">
+      <div class="modal-card" onclick="event.stopPropagation()">
+        <div class="modal-head">
+          <h3>Auto-Number Group IDs</h3>
+          <button class="btn icon small secondary" onclick="closeNumberingModal()">${ICONS.x}</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">Applies to all ${instances.length} instance(s) of <b>${esc(t.ref)}</b>, in table order. Any resulting duplicates are still flagged for review.</p>
+          <div class="modal-row">
+            <div class="modal-field"><label>Prefix</label><input type="text" id="numPrefix" placeholder="e.g. DOOR-T1-" value="${esc(m.prefix)}" oninput="updateNumberingField('prefix', this.value)"></div>
+          </div>
+          <div class="modal-row">
+            <div class="modal-field"><label>Starting Number</label><input type="number" id="numStart" min="0" value="${m.start}" oninput="updateNumberingField('start', this.value)"></div>
+          </div>
+          <div class="modal-advanced-toggle" onclick="toggleNumberingAdvanced()">${m.advancedOpen?ICONS.chevronDown:ICONS.chevronRight} Advanced options</div>
+          ${m.advancedOpen ? `
+          <div class="modal-row">
+            <div class="modal-field"><label>Increment Amount</label><input type="number" id="numIncrement" min="1" value="${m.increment}" oninput="updateNumberingField('increment', this.value)"></div>
+            <div class="modal-field"><label>Number of Digits</label><input type="number" id="numDigits" min="0" max="6" value="${m.digits}" oninput="updateNumberingField('digits', this.value)"></div>
+          </div>
+          <div class="modal-row">
+            <div class="modal-field"><label>Suffix</label><input type="text" id="numSuffix" placeholder="optional" value="${esc(m.suffix)}" oninput="updateNumberingField('suffix', this.value)"></div>
+          </div>` : ''}
+          <div class="modal-preview">
+            <div class="lbl">Preview</div>
+            <div>${previewText || '—'}</div>
+          </div>
+        </div>
+        <div class="modal-foot">
+          <button class="btn secondary" onclick="closeNumberingModal()">Cancel</button>
+          <button class="btn" onclick="applyNumbering()">Apply</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function moveDevice(tid, uid, dir){
+  const t = state.templates.find(x=>x.id===tid);
+  const idx = t.devices.findIndex(d=>d.uid===uid);
+  const newIdx = idx+dir;
+  if(newIdx<0||newIdx>=t.devices.length) return;
+  [t.devices[idx], t.devices[newIdx]] = [t.devices[newIdx], t.devices[idx]];
+  render();
+}
+function removeDeviceFromTemplate(tid, uid){
+  const t = state.templates.find(x=>x.id===tid);
+  t.devices = t.devices.filter(d=>d.uid!==uid);
+  render();
+}
+function deleteTemplate(tid){
+  state.templates = state.templates.filter(t=>t.id!==tid);
+  state.instances = state.instances.filter(i=>i.templateId!==tid);
+  if(state.openAddPanelTid===tid) state.openAddPanelTid = null;
+  render();
+}
+function unlockTemplate(tid){
+  const t = state.templates.find(x=>x.id===tid);
+  t.locked = false;
+  state.instances.filter(i=>i.templateId===tid).forEach(i=>i.status='new');
+  render();
+  toast(t.ref+' unlocked — instances will be recreated on next Create All.','error');
+}
+
+/* ---- click-driven "Add Device" search panel (replaces drag-and-drop) ---- */
+function toggleTemplateAddPanel(tid){
+  state.openAddPanelTid = (state.openAddPanelTid === tid) ? null : tid;
+  state.addSearch = '';
+  renderBuild();
+}
+function renderTemplateAddPanel(t){
+  const q = (state.addSearch || '').toLowerCase();
+  const eligible = state.ppm.filter(d => d.subclass && !d.hidden &&
+    (!q || d.description.toLowerCase().includes(q) || d.manufacturer.toLowerCase().includes(q) || d.model.toLowerCase().includes(q)));
+  return `
+    <div class="add-panel">
+      <div class="add-panel-search">${ICONS.search}<input type="text" id="addPanelSearch" placeholder="Search description, make or model…" value="${esc(q)}" oninput="state.addSearch=this.value; reRenderPreserveFocus(renderBuild)"></div>
+      <div class="add-panel-list">
+        ${eligible.map(d=>{
+          const used = usedQtyForDevice(d.id);
+          const avail = d.qty - used;
+          const cls = availClass(avail, d.qty);
+          return `<div class="add-panel-row">
+            <div class="apr-info">
+              <div class="apr-desc">${esc(d.description)}</div>
+              <div class="apr-mm">${esc(d.manufacturer)} · ${esc(d.model)}</div>
+            </div>
+            <div class="apr-avail ${cls}">${avail} / ${d.qty}</div>
+            <button class="btn small" onclick="addDeviceToTemplate('${t.id}','${d.id}')">${ICONS.plus} Add</button>
+          </div>`;
+        }).join('') || `<div class="add-panel-empty">No matching devices with an assigned subclass. Assign a subclass in the Device Library first.</div>`}
+      </div>
+    </div>
+  `;
+}
+function addDeviceToTemplate(tid, deviceId){
+  const t = state.templates.find(x=>x.id===tid);
+  if(t.locked){ toast('Template is locked — unlock it first.','error'); return; }
+  const src = state.ppm.find(d=>d.id===deviceId);
+  if(!src || !src.subclass){ toast('Assign a subclass to this device before adding it.','error'); return; }
+  t.devices.push({uid:'u'+(state.seq++), deviceId, friendlyName:src.description, qtyPerInstance:1});
+  render();
+  toast(src.description+' added to '+t.ref+'. Edit its friendly name and quantity below.', 'success');
+}
+
+function generateInstances(tid){
+  const t = state.templates.find(x=>x.id===tid);
+  const err = document.getElementById('genError-'+tid);
+  err.innerHTML = '';
+  const count = parseInt(document.getElementById('genCount-'+tid).value) || 0;
+  if(count<1){ err.innerHTML = ICONS.alert+' Enter a number of instances to add.'; return; }
+  const override = document.getElementById('genOverride-'+tid).checked;
+  const max = maxCreatableFor(t);
+  if(!override && count > max){
+    err.innerHTML = `${ICONS.alert} Requesting ${count} would exceed available PPM quantity (max ${max}). Reduce the count or enable "override".`;
+    return;
+  }
+  const existingCount = state.instances.filter(i=>i.templateId===tid).length;
+  for(let i=1;i<=count;i++){
+    const suffix = String(existingCount+i).padStart(2,'0');
+    state.instances.push({id:'i'+(state.seq++), templateId:tid, groupId:t.ref+'-'+suffix, groupName:t.description+' '+suffix, status:'new', expanded:false});
+  }
+  render();
+  toast(`Generated ${count} instance(s) of ${t.ref}.${count>max?' (quantity override applied)':''}`, count>max?'error':'success');
+}
+
+function renderInstanceTable(t, dupes){
+  const instances = state.instances.filter(i=>i.templateId===t.id);
+  if(instances.length===0){
+    return `<div class="empty" style="padding:16px;"><p>No instances generated for this template yet.</p></div>`;
+  }
+  return `<table><thead><tr><th style="width:24px;"></th><th>Group ID <button class="th-action" title="Auto-number Group IDs" onclick="openNumberingModal('${t.id}')">${ICONS.hash}</button></th><th>Group Name</th><th>Status</th><th></th></tr></thead><tbody>
+    ${instances.map(inst=>{
+      const isDup = dupes.has(inst.groupId);
+      return `<tr>
+        <td><span class="expand-toggle" onclick="toggleInstanceExpand('${inst.id}')">${inst.expanded?ICONS.chevronDown:ICONS.chevronRight}</span></td>
+        <td>
+          <input class="name-input ${isDup?'err':''}" type="text" value="${esc(inst.groupId)}" onchange="updateInstanceField('${inst.id}','groupId', this.value)">
+          ${isDup?`<div style="color:var(--danger);font-size:10.5px;margin-top:2px;">Duplicate Group ID</div>`:''}
+        </td>
+        <td><input class="name-input" type="text" value="${esc(inst.groupName)}" onchange="updateInstanceField('${inst.id}','groupName', this.value)"></td>
+        <td>${inst.status==='existing' ? '<span class="badge success">Existing</span>' : '<span class="badge warning">New</span>'}</td>
+        <td><button class="btn icon small danger" onclick="removeInstance('${inst.id}')" title="Remove">${ICONS.x}</button></td>
+      </tr>
+      ${inst.expanded ? renderInstanceChildren(inst, t) : ''}`;
+    }).join('')}
+  </tbody></table>`;
+}
+function renderInstanceChildren(inst, t){
+  const rows = t.devices.map(entry=>{
+    const src = state.ppm.find(d=>d.id===entry.deviceId);
+    return `<tr><td>${esc(inst.groupId)}</td><td>${esc(inst.groupName)} — ${esc(entry.friendlyName)}</td><td>${entry.qtyPerInstance}</td><td>${src?esc(src.subclass):'—'}</td></tr>`;
+  }).join('');
+  return `<tr><td colspan="5" class="child-table">
+    <table><thead><tr><th>Group ID</th><th>Child Device Name</th><th>Qty</th><th>Subclass</th></tr></thead><tbody>${rows}</tbody></table>
+    <div style="font-size:11px;color:var(--ink-soft);margin-top:6px;">Parent device: <b>${esc(inst.groupName)}</b> (${esc(t.parentSubclass)})</div>
+  </td></tr>`;
+}
+function toggleInstanceExpand(id){ state.instances.find(i=>i.id===id).expanded = !state.instances.find(i=>i.id===id).expanded; renderBuild(); }
+function updateInstanceField(id, field, val){ state.instances.find(i=>i.id===id)[field] = val; render(); }
+function removeInstance(id){ state.instances = state.instances.filter(i=>i.id!==id); render(); }
+
+/* ============================= PREVIEW (RIGHT) ============================= */
+function buildPreviewRows(){
+  const rows = [];
+  state.instances.forEach(inst=>{
+    const t = state.templates.find(x=>x.id===inst.templateId);
+    if(!t) return;
+    rows.push({group:inst.groupId, name:inst.groupName, subclass:t.parentSubclass, type:'Parent', status:inst.status});
+    t.devices.forEach(entry=>{
+      rows.push({group:inst.groupId, name: inst.groupName+' — '+entry.friendlyName, subclass:(state.ppm.find(d=>d.id===entry.deviceId)||{}).subclass || '—', type:'Child', status:inst.status});
+    });
+  });
+  return rows;
+}
+function renderPreview(){
+  const rows = buildPreviewRows();
+  const newCount = rows.filter(r=>r.status==='new').length;
+  const existingCount = rows.filter(r=>r.status==='existing').length;
+  const dupes = groupIdDuplicates();
+  const unresolved = dupes.size>0;
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / state.pageSize));
+  if(state.page>totalPages) state.page = totalPages;
+  const start = (state.page-1)*state.pageSize;
+  const pageRows = rows.slice(start, start+state.pageSize);
+
+  const body = document.getElementById('previewBody');
+  body.innerHTML = `
+    <div class="summary-grid">
+      <div class="summary-cell"><div class="num">${state.instances.length}</div><div class="lbl">Instances</div></div>
+      <div class="summary-cell ${newCount?'warn':''}"><div class="num">${newCount}</div><div class="lbl">To create</div></div>
+      <div class="summary-cell"><div class="num">${existingCount}</div><div class="lbl">Already created</div></div>
+      <div class="summary-cell ${unresolved?'bad':''}"><div class="num">${dupes.size}</div><div class="lbl">Duplicate IDs</div></div>
+    </div>
+
+    ${rows.length===0
+      ? `<div class="empty"><div class="glyph">${ICONS.eye}</div><p><b>Nothing to preview.</b></p><p>Generate instances in the build canvas to see devices here.</p></div>`
+      : `<div>${pageRows.map(r=>`
+          <div class="preview-row">
+            <div class="pname">
+              ${r.type==='Parent' ? '<b>'+esc(r.name)+'</b>' : esc(r.name)}
+              <div class="ptag">${esc(r.group)} · ${esc(r.subclass)}${dupes.has(r.group)?' · <span style="color:var(--danger)">dup</span>':''}</div>
+            </div>
+            <div>${r.status==='existing'?'<span class="badge success">Existing</span>':'<span class="badge warning">Pending</span>'}</div>
+          </div>
+        `).join('')}</div>
+        <div class="pagination">
+          <span>Rows/page</span>
+          <select onchange="state.pageSize=parseInt(this.value); state.page=1; renderPreview();">
+            ${[8,20,50].map(n=>`<option value="${n}" ${state.pageSize===n?'selected':''}>${n}</option>`).join('')}
+          </select>
+          <span>${state.page}/${totalPages}</span>
+          <button class="pg-btn" ${state.page<=1?'disabled':''} onclick="state.page--; renderPreview();">‹</button>
+          <button class="pg-btn" ${state.page>=totalPages?'disabled':''} onclick="state.page++; renderPreview();">›</button>
+        </div>`}
+
+    <div class="sticky-cta">
+      <button class="btn block" id="btnCreateAll" ${unresolved||newCount===0?'disabled':''} onclick="createAll()">Create All (${newCount})</button>
+      ${unresolved ? `<div class="inline-err" style="justify-content:center;margin-top:6px;">${ICONS.alert} Resolve duplicate Group IDs first.</div>` : ''}
+    </div>
+  `;
+}
+function createAll(){
+  const dupes = groupIdDuplicates();
+  if(dupes.size>0){ toast('Resolve duplicate Group IDs before creating.','error'); return; }
+  const newOnes = state.instances.filter(i=>i.status==='new');
+  if(newOnes.length===0){ toast('Nothing new to create.','error'); return; }
+  newOnes.forEach(i=>i.status='existing');
+  const touched = new Set(newOnes.map(i=>i.templateId));
+  touched.forEach(tid=>{ state.templates.find(t=>t.id===tid).locked = true; });
+  render();
+  toast(`Created ${newOnes.length} assembly instance(s) — parent and child devices added to iTrac.`, 'success');
+}
+
+/* ============================= INIT ============================= */
+document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && state.numberingModal){ closeNumberingModal(); } });
+render();
+</script>
+</body>
+</html>
