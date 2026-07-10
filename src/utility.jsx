@@ -991,6 +991,13 @@ function UtilityPage() {
               <button className="btn-secondary" type="button" disabled={!selectedCount} onClick={() => setModal('renumber')}>
                 {selectedCount ? `Renumber selected (${selectedCount})` : 'Renumber selected'}
               </button>
+              <span className="info-tip" tabIndex={0} role="img" aria-label="Renumber help">
+                ⓘ
+                <span className="info-tip-text">
+                  Select one or more instance rows (checkbox or right-click). Renumber applies only to selected rows,
+                  in current list order.
+                </span>
+              </span>
             </div>
             <div className="table-wrap">
               {instances.length > 0 ? (

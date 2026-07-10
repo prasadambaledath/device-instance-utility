@@ -65,7 +65,7 @@
   background: #fff;
   color: #054163;
   border: 1px solid #c8cdd2;
-  padding: 4px 10px;
+  padding: 8px;
   font-size: 11.5px;
 }
 
@@ -169,7 +169,7 @@
 select {
   border: 1px solid #d5d8db;
   border-radius: 3px;
-  padding: 4px 8px;
+  padding: 8px;
   font-size: 12px;
   background: #fff;
 }
@@ -217,7 +217,7 @@ thead th {
   letter-spacing: 0.4px;
   text-transform: uppercase;
   text-align: left;
-  padding: 5px 8px;
+  padding: 10px 8px;
 }
 
 tbody td {
@@ -294,7 +294,7 @@ tbody tr.selected {
   background: #fff;
   color: #424242;
   font-size: 11.5px;
-  padding: 3px 7px;
+  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -525,7 +525,7 @@ tbody tr.selected {
   background: #fff;
   border: 1px solid #d5d8db;
   border-radius: 3px;
-  padding: 2px 8px;
+  padding: 8px;
   cursor: pointer;
   color: #054163;
 }
@@ -574,6 +574,49 @@ tbody tr.selected {
 .muted {
   color: #666;
   font-size: 11.5px;
+}
+
+.info-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #c8cdd2;
+  color: #3e80ed;
+  font-size: 11px;
+  line-height: 1;
+  cursor: help;
+  background: #fff;
+}
+
+.info-tip-text {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 280px;
+  background: #272727;
+  color: #fff;
+  border-radius: 4px;
+  padding: 7px 9px;
+  font-size: 11px;
+  line-height: 1.4;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  z-index: 30;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-2px);
+  transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+  pointer-events: none;
+}
+
+.info-tip:hover .info-tip-text,
+.info-tip:focus .info-tip-text {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 .err-txt {
