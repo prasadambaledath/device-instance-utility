@@ -18,9 +18,9 @@
 }
 
 .utility-v2-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 400;
-  color: #272727;
+  color: #555;
 }
 
 .utility-v2-header-right {
@@ -151,7 +151,7 @@
 
 .panel-title {
   font-weight: 500;
-  font-size: 16px;
+  font-size: 14px;
   color: #054163;
   padding: 10px 0;
 }
@@ -507,6 +507,11 @@ tbody tr.selected {
   max-height: none;
   display: flex;
   flex-direction: column;
+}
+
+.preview-panel .panel-head {
+  display: flex;
+  justify-content: space-between;
 }
 
 .preview-panel .table-wrap {

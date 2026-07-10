@@ -263,6 +263,53 @@ function UtilityPage() {
     showToast(`Imported ${snap.length} material records from Oracle PPM.`)
   }
 
+  const clearPersistedData = () => {
+    const confirmed = window.confirm(
+      'Clear all data?\n\nThis will clear all utility data. Are you sure you want to continue?',
+    )
+    if (!confirmed) return
+
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(STORAGE_KEY)
+      }
+    } catch {
+      // Ignore storage clear failures.
+      void 0
+    }
+
+    setImportCount(0)
+    setLastImportAt(null)
+    setDevices([])
+    setTemplates([])
+    setOvr({})
+    setSelInst({})
+
+    setSearch('')
+    setShowHidden(false)
+    setTplSearch('')
+    setInstSearch('')
+    setPvSearch('')
+    setSort({ col: null, dir: 1 })
+    setPvSort({ col: null, dir: 1 })
+    setPage(1)
+    setPageSize(10)
+
+    setExpTpl({})
+    setExpInst({})
+    setSubDD('')
+    setSubFilter('')
+    setDragCtx(null)
+    setDragOverItem('')
+
+    setToast(null)
+    setBanner('')
+    setModal('')
+    setOvrKey('')
+    setManual({ desc: '', make: '', model: '', subclass: '', qty: 1, err: '' })
+    setRen({ prefix: '', suffix: '', start: 1, inc: 1, pad: 3 })
+  }
+
   const updDevice = (key, patch) =>
     setDevices((curr) => curr.map((d) => (d.key === key ? { ...d, ...patch } : d)))
 
@@ -409,6 +456,13 @@ function UtilityPage() {
     const rem = totalQty(d) - usedQty(d.key)
     return rem < 0 && !d.hidden && !d.ovrOn
   })
+  const hasDataToClear =
+    devices.length > 0 ||
+    templates.length > 0 ||
+    Object.keys(ovr).length > 0 ||
+    importCount > 0 ||
+    !!lastImportAt ||
+    pageSize !== 10
 
   const visibleTemplates = (() => {
     const q = norm(tplSearch)
@@ -552,6 +606,15 @@ function UtilityPage() {
           <div className="utility-v2-import-stamp">{fmtImport(lastImportAt)}</div>
           <button className="btn-primary" type="button" onClick={doImport}>
             Import Devices
+          </button>
+          <button
+            className="btn-secondary"
+            type="button"
+            onClick={clearPersistedData}
+            disabled={!hasDataToClear}
+            title={!hasDataToClear ? 'Nothing to clear' : 'Clear all utility data'}
+          >
+            Reset All
           </button>
         </div>
       </div>
@@ -1100,7 +1163,11 @@ function UtilityPage() {
           <section className="panel preview-panel">
             <div className="panel-head">
               <span className="panel-title">4 · Live Preview</span>
-              <span className="muted">{flatPreview.length ? `${flatPreview.length} devices` : 'Nothing to create yet'}</span>
+              <span className="muted">
+                {flatPreview.length
+                  ? `Total: ${flatPreview.length} devices (${instances.length} parents and ${instances.reduce((a, g) => a + g.tpl.items.length, 0)} children)`
+                  : 'Nothing to create yet'}
+              </span>
             </div>
             <div className="table-wrap">
               {flatPreview.length > 0 ? (
@@ -1169,9 +1236,6 @@ function UtilityPage() {
           {blockers.length ? `⚠ ${blockers.join(' · ')}` : '✓ All validations passed — ready to create.'}
         </div>
         <div className="create-bar-actions">
-          <div className="muted">
-            {instances.length} parents · {instances.reduce((a, g) => a + g.tpl.items.length, 0)} children
-          </div>
           <button className="btn-primary" type="button" disabled={!!blockers.length} onClick={() => setModal('createAll')}>
             Create All
           </button>
