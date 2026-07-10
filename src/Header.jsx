@@ -13,10 +13,10 @@ function Header() {
         <Link to="/" className="logo">
           <span className="i">i</span>Trac
         </Link>
-        <span className="tool-divider" />
-        <span className="tool-name">
-          Device Instance Utility<span className="tag">POC</span>
-        </span>
+        
+      </div>
+      <div className="poc-info tool-name">
+        POC - Device Instance Utility
       </div>
     </div>
   )

@@ -1,4 +1,6 @@
 .topbar {
+  display: flex;
+  justify-content: space-between;
   background: #054163;
   color: #fff;
   padding: 8px 20px;
@@ -43,18 +45,12 @@
   color: #cc2200;
 }
 
-.brand .tool-divider {
-  width: 1px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.brand .tool-name {
+.poc-info.tool-name {
   font-size: 14px;
-  font-weight: 600;
+  display: flex;
 }
 
-.brand .tool-name .tag {
+.poc-info.tool-name .tag {
   font-size: 9.5px;
   font-weight: 700;
   background: rgba(255, 255, 255, 0.16);

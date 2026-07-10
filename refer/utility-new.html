@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oracle PPM Device Grouping Tool — Asset Import Utility</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; padding:0; background:#f4f5f6; }
+  body { font-family:'Roboto',sans-serif; font-size:12px; color:#424242; }
+  a { color:#054163; text-decoration:none; }
+  a:hover { color:#0e2c49; text-decoration:underline; }
+  input, select, button { font-family:'Roboto',sans-serif; }
+  input:focus, select:focus { outline:none; }
+  * { box-sizing:border-box; }
+  @keyframes toastIn { from { transform:translateY(8px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+
+  .mono { font-family:'Roboto Mono',monospace; }
+
+  /* buttons */
+  .btn-primary { background:#054163; color:#fff; border:none; border-radius:3px; padding:7px 16px; font-size:12px; font-weight:500; cursor:pointer; }
+  .btn-primary:hover { background:#0e2c49; }
+  .btn-primary:disabled { background:#b8c2c9; cursor:not-allowed; }
+  .btn-secondary { background:#fff; color:#054163; border:1px solid #c8cdd2; border-radius:3px; padding:4px 10px; font-size:11.5px; font-weight:500; cursor:pointer; }
+  .btn-secondary:hover { background:#f0f4f7; }
+  .btn-secondary:disabled { color:#b5b5b5; cursor:default; }
+  .btn-cancel { background:#fff; border:1px solid #c8cdd2; border-radius:3px; padding:6px 14px; font-size:12px; cursor:pointer; color:#424242; }
+  .btn-cancel:hover { background:#f0f0f0; }
+  .btn-modal-primary { background:#054163; color:#fff; border:none; border-radius:3px; padding:6px 14px; font-size:12px; font-weight:500; cursor:pointer; }
+  .btn-modal-primary:hover { background:#0e2c49; }
+  .btn-danger { background:#bf311a; color:#fff; border:none; border-radius:3px; padding:6px 14px; font-size:12px; font-weight:500; cursor:pointer; }
+  .btn-danger:hover { background:#a32b16; }
+  .icon-btn { background:none; border:none; color:#b5b5b5; cursor:pointer; font-size:11px; padding:2px; }
+  .icon-btn:hover { color:#054163; }
+  .icon-btn.del:hover { color:#a80000; }
+  .hide-btn { background:none; border:none; color:#8f8f8f; cursor:pointer; font-size:11px; padding:2px; }
+  .hide-btn:hover { color:#054163; }
+  .pg-btn { background:#fff; border:1px solid #d5d8db; border-radius:3px; padding:2px 8px; cursor:pointer; color:#054163; }
+  .pg-btn:hover { background:#f0f4f7; }
+
+  /* inputs */
+  .txt { border:1px solid #d5d8db; border-radius:3px; padding:4px 8px; font-size:12px; background:#fff; }
+  .txt:focus { border-color:#054163; }
+  .cell-input { width:100%; font-size:12px; border:1px solid #e0e3e6; border-radius:3px; padding:3px 5px; background:#fff; }
+  .cell-input:hover { border-color:#c0c6cb; }
+  .cell-input:focus { border-color:#054163; }
+  .cell-input.err { border-color:#d9a8a0; }
+  .modal-input { border:1px solid #d5d8db; border-radius:3px; padding:5px 8px; font-size:12px; }
+  .modal-input:focus { border-color:#054163; }
+
+  /* dropdown */
+  .dd-btn { width:100%; display:flex; align-items:center; gap:4px; border:1px solid #e0e3e6; border-radius:3px; padding:3px 6px; font-size:11.5px; background:#fff; color:#424242; cursor:pointer; text-align:left; }
+  .dd-btn:hover { border-color:#c0c6cb; }
+  .dd-btn.empty { border-color:#d9a8a0; color:#8f8f8f; }
+  .dd-box { position:absolute; top:26px; left:6px; width:210px; background:#fff; border:1px solid #d5d8db; border-radius:3px; box-shadow:0 4px 12px rgba(0,0,0,.12); z-index:10; }
+  .dd-filter { width:100%; border:none; border-bottom:1px solid #ececec; padding:5px 8px; font-size:11.5px; }
+  .dd-opt { padding:4px 8px; cursor:pointer; font-size:11.5px; color:#424242; }
+  .dd-opt:hover { background:#eef3f7; }
+  .dd-opt.cur { background:#eef3f7; }
+  .dd-opt.none { color:#8f8f8f; }
+
+  /* grids */
+  .grid-head { font-size:10.5px; font-weight:500; letter-spacing:.4px; text-transform:uppercase; color:#666; background:#f6f6f6; border-bottom:1px solid #ececec; }
+  .devgrid { display:grid; grid-template-columns:96px minmax(200px,1.4fr) 105px 130px 165px 64px 70px 56px 52px 80px 56px; }
+  .tplgrid { display:grid; grid-template-columns:26px 92px minmax(170px,1fr) 170px 88px 64px minmax(170px,1.1fr) 54px; }
+  .itemgrid { display:grid; grid-template-columns:20px 220px minmax(220px,1fr) 110px 30px; }
+  .instgrid { display:grid; grid-template-columns:30px 26px 160px minmax(200px,1fr) 100px 70px minmax(170px,1fr); }
+  .childgrid { display:grid; grid-template-columns:minmax(240px,1fr) 150px 160px; }
+  .pvgrid { display:grid; grid-template-columns:34px 56px 92px minmax(140px,1fr) 96px; }
+
+  .sort-h { padding:5px 8px; cursor:pointer; user-select:none; white-space:nowrap; }
+  .sort-h:hover { color:#054163; }
+  .plain-h { padding:5px 8px; cursor:default; user-select:none; white-space:nowrap; }
+
+  .dev-row { align-items:center; border-bottom:1px solid #f2f2f2; }
+  .dev-row:hover { background:#f7fafc !important; }
+  .tpl-row { align-items:center; }
+  .tpl-row:hover { background:#f7fafc; }
+  .inst-row { align-items:center; }
+  .inst-row:hover { background:#f7fafc !important; }
+  .chip { font-size:10px; font-weight:500; padding:1px 6px; border-radius:9px; white-space:nowrap; }
+  .count-pill { background:#f0f0f0; border-radius:9px; padding:1px 7px; font-size:11px; color:#666; }
+  .panel { background:#fff; border:1px solid #e7e7e7; border-radius:4px; }
+  .panel-head { display:flex; align-items:center; gap:10px; padding:6px 12px; border-bottom:1px solid #ececec; }
+  .panel-title { font-weight:700; font-size:12px; color:#272727; }
+  .ellip { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .drag-handle { text-align:center; color:#b5b5b5; cursor:grab; font-size:11px; letter-spacing:-1px; user-select:none; }
+  .drag-handle:hover { color:#054163; }
+  .picker-row { padding:4px 8px; border-bottom:1px solid #f2f2f2; display:flex; gap:6px; align-items:baseline; }
+  .picker-row:hover { background:#eef3f7; }
+  .add-search { width:100%; font-size:11.5px; border:1px dashed #c0c6cb; border-radius:3px; padding:4px 8px; background:#fff; color:#424242; }
+  .add-search:focus { border-color:#054163; border-style:solid; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════
+   Oracle PPM Device Grouping Tool — Asset Import Utility (prototype)
+   Plain HTML + vanilla JavaScript. No frameworks, no build step.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─────────────── Sample Oracle PPM material data ───────────────
+   Snapshot A = 1st import; Snapshot B = 2nd import (adds 2, omits 2,
+   changes 3 qtys). Imports alternate A/B. */
+
+const SUBCLASSES = [
+  'Card Reader', 'Door Lock', 'Door Contact', 'REX Device', 'Door Hardware',
+  'Panel', 'Power', 'Camera', 'Intercom', 'Intrusion Sensor',
+  'Network', 'Software License', 'Enclosure', 'Turnstile', 'Peripheral', 'Notification Device'
+];
+
+// [key, description, make, model, baseQty, suggestedSubclass]
+const CATALOG = [
+  ['d01', 'Multi-tech card reader', 'HID', 'Signo 20', 24, 'Card Reader'],
+  ['d02', 'Multi-tech card reader, keypad', 'HID', 'Signo 20K', 8, 'Card Reader'],
+  ['d03', 'Mullion card reader', 'HID', 'iCLASS SE R10', 30, 'Card Reader'],
+  ['d04', 'Mid-range card reader', 'HID', 'iCLASS SE R15', 12, 'Card Reader'],
+  ['d05', 'Wall switch card reader', 'HID', 'iCLASS SE R40', 16, 'Card Reader'],
+  ['d06', 'Electric strike, fail-secure', 'HES', '1600-630', 22, 'Door Lock'],
+  ['d07', 'Electric strike, fail-safe', 'HES', '9600-630', 10, 'Door Lock'],
+  ['d08', 'Magnetic lock, 1200 lb', 'Securitron', 'M62', 6, 'Door Lock'],
+  ['d09', 'Electrified mortise lock', 'Sargent', '8271', 14, 'Door Lock'],
+  ['d10', 'Electrified panic hardware', 'Von Duprin', '99EL', 8, 'Door Lock'],
+  ['d11', 'Door contact, recessed', 'GRI', '180-12', 40, 'Door Contact'],
+  ['d12', 'Door contact, surface mount', 'GRI', '4400A', 18, 'Door Contact'],
+  ['d13', 'Overhead door contact', 'GRI', '4532', 4, 'Door Contact'],
+  ['d14', 'Request-to-exit PIR', 'Bosch', 'DS150i', 26, 'REX Device'],
+  ['d15', 'Request-to-exit PIR', 'Kantech', 'T.REX-XL', 12, 'REX Device'],
+  ['d16', 'Push-to-exit button', 'Camden', 'CM-30U', 10, 'REX Device'],
+  ['d17', 'Intelligent controller', 'Mercury', 'LP1502', 4, 'Panel'],
+  ['d18', 'Door controller, 2-reader', 'Mercury', 'MR52', 12, 'Panel'],
+  ['d19', 'Input module, 16-zone', 'Mercury', 'MR16IN', 3, 'Panel'],
+  ['d20', 'Output module, 16-relay', 'Mercury', 'MR16OUT', 2, 'Panel'],
+  ['d21', 'Power supply, 12/24 VDC', 'LifeSafety Power', 'FPO150', 6, 'Power'],
+  ['d22', 'Battery, 12V 7Ah', 'Power-Sonic', 'PS-1270', 12, 'Power'],
+  ['d23', 'Dome camera, 5MP', 'Axis', 'P3265-LVE', 28, 'Camera'],
+  ['d24', 'Bullet camera, 4K', 'Axis', 'P1468-LE', 10, 'Camera'],
+  ['d25', 'PTZ camera', 'Axis', 'Q6135-LE', 4, 'Camera'],
+  ['d26', 'Multisensor camera', 'Axis', 'P3735-PLE', 6, 'Camera'],
+  ['d27', 'Fisheye camera', 'Axis', 'M4308-PLE', 8, 'Camera'],
+  ['d28', 'Intercom door station', 'Aiphone', 'IX-DV', 6, 'Intercom'],
+  ['d29', 'Intercom master station', 'Aiphone', 'IX-MV7-HB', 2, 'Intercom'],
+  ['d30', 'Motion detector, dual-tech', 'Bosch', 'ISC-BDL2-WP12G', 20, 'Intrusion Sensor'],
+  ['d31', 'Glassbreak detector', 'Honeywell', 'FG1625', 14, 'Intrusion Sensor'],
+  ['d32', 'Panic / duress button', 'Honeywell', '269R', 8, 'Intrusion Sensor'],
+  ['d33', 'Alarm keypad', 'Bosch', 'B940W', 5, 'Intrusion Sensor'],
+  ['d34', 'Intrusion panel', 'Bosch', 'B9512G', 1, 'Panel'],
+  ['d35', 'Card printer', 'Fargo', 'DTC4500e', 1, 'Peripheral'],
+  ['d36', 'Enrollment reader', 'HID', 'OMNIKEY 5427CK', 2, 'Peripheral'],
+  ['d37', 'Wireless lockset', 'Assa Abloy', 'IN120', 16, 'Door Lock'],
+  ['d38', 'Power transfer hinge', 'Command Access', 'ETH4W', 24, 'Door Hardware'],
+  ['d39', 'Door position switch, high-security', 'Magnasphere', 'HSS-L2D', 6, 'Door Contact'],
+  ['d40', 'Local alarm sounder', 'STI', 'SA5000', 8, 'Notification Device'],
+  ['d41', 'Network switch, 24-port PoE', 'Cisco', 'CBS350-24P', 4, 'Network'],
+  ['d42', 'Media converter', 'ComNet', 'CNFE1002M', 8, 'Network'],
+  ['d43', 'UPS, 1500VA', 'APC', 'SMT1500RM2U', 2, 'Power'],
+  ['d44', 'VMS server', 'Dell', 'PowerEdge R450', 1, 'Network'],
+  ['d45', 'Monitoring workstation', 'Dell', 'OptiPlex 7010', 3, 'Network'],
+  ['d46', 'Monitor, 27-inch', 'Dell', 'P2723DE', 6, 'Peripheral'],
+  ['d47', 'VMS camera license', 'Milestone', 'XProtect Device', 56, 'Software License'],
+  ['d48', 'Access control door license', 'Genetec', 'Synergis-1DR', 46, 'Software License'],
+  ['d49', 'Junction box', 'Hoffman', 'A8066CHNF', 20, 'Enclosure'],
+  ['d50', 'Reader interface board', 'Mercury', 'MR62e', 10, 'Panel'],
+  ['d51', 'Surge protector, reader circuit', 'Ditek', 'DTK-2MHLP24B', 12, 'Power'],
+  ['d52', 'Composite access control cable', 'Windy City Wire', '4463270', 18, 'Enclosure'],
+  ['d53', 'Cat6A cable, box', 'Belden', '10GXS12', 24, 'Network'],
+  ['d54', 'Optical turnstile lane', 'Boon Edam', 'Lifeline Speedlane', 2, 'Turnstile'],
+  ['d55', 'Camera pole, parking', 'Pelco', 'PP4348', 4, 'Camera'],
+  ['d56', 'Key switch', 'Camden', 'CM-1200', 5, 'Door Hardware'],
+  ['d57', 'Delayed egress device', 'Von Duprin', 'Chexit CX99', 3, 'Door Lock'],
+  ['d58', 'Elevator reader, flush mount', 'HID', 'iCLASS SE R10 ELV', 8, 'Card Reader'],
+  ['d59', 'Mobile credential pack (100)', 'HID', 'MOBILE-ID', 5, 'Card Reader'],
+  ['d60', 'Camera mount, pendant', 'Axis', 'T91B50', 12, 'Camera']
+];
+
+const B_ONLY = new Set(['d59', 'd60']);        // appear from 2nd import (new)
+const B_OMITTED = new Set(['d13', 'd35']);     // disappear on 2nd import (omitted)
+const B_QTY = { d01: 30, d11: 48, d23: 34 };   // qty changes on 2nd import
+
+// Returns the PPM snapshot for import number n (1-based): odd = A, even = B.
+function getSnapshot(n) {
+  const isB = n % 2 === 0;
+  const out = [];
+  for (const [key, desc, make, model, qty, suggested] of CATALOG) {
+    if (!isB && B_ONLY.has(key)) continue;
+    if (isB && B_OMITTED.has(key)) continue;
+    out.push({ key, desc, make, model, qty: isB && B_QTY[key] ? B_QTY[key] : qty, suggested });
+  }
+  return out;
+}
+
+/* ─────────────── State ─────────────── */
+
+const KEY = 'oracle-ppm-utility-v1';
+
+const state = {
+  sim: 'success', importCount: 0, lastImportAt: null,
+  devices: [], search: '', showHidden: false,
+  sort: { col: null, dir: 1 }, pvSort: { col: null, dir: 1 },
+  subDD: null, subFilter: '', selInst: {},
+  tplSearch: '', instSearch: '', pvSearch: '', dragOver: null,
+  templates: [], ovr: {}, expTpl: {}, expInst: {},
+  page: 1, pageSize: 10,
+  modal: null, manual: { desc: '', make: '', model: '', subclass: '', qty: 1, err: '' },
+  ovrKey: null,
+  ren: { prefix: '', suffix: '', start: 1, inc: 1, pad: 3 },
+  toast: null, banner: null, noSubs: false
+};
+
+(function load() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+  if (saved && saved.devices) {
+    state.devices = saved.devices;
+    state.templates = saved.templates || [];
+    state.ovr = saved.ovr || {};
+    state.importCount = saved.importCount || 0;
+    state.lastImportAt = saved.lastImportAt || null;
+    state.pageSize = saved.pageSize || 10;
+  }
+})();
+
+function persist() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify({
+      devices: state.devices, templates: state.templates, ovr: state.ovr,
+      importCount: state.importCount, lastImportAt: state.lastImportAt, pageSize: state.pageSize
+    }));
+  } catch (e) {}
+}
+
+function set(patch) { Object.assign(state, patch); render(); }
+function commit(patch) { Object.assign(state, patch); persist(); render(); }
+
+let toastTimer = null;
+function showToast(msg, kind) {
+  clearTimeout(toastTimer);
+  state.toast = { msg, kind: kind || 'success' };
+  render();
+  toastTimer = setTimeout(() => { state.toast = null; render(); }, 4200);
+}
+
+/* ─────────────── Helpers ─────────────── */
+
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = (n, w) => String(n).padStart(w, '0');
+const norm = v => String(v || '').trim().toLowerCase();
+
+function usedQty(key) {
+  let u = 0;
+  for (const t of state.templates) {
+    const c = t.items.filter(i => i.deviceKey === key).length;
+    u += c * (Number(t.qty) || 0);
+  }
+  return u;
+}
+function totalQty(d) { return d.omitted ? 0 : Number(d.ppmQty) || 0; }
+function findDevice(key) { return state.devices.find(d => d.key === key); }
+function findTpl(id) { return state.templates.find(t => t.id === id); }
+
+function updDevice(key, patch) {
+  state.devices = state.devices.map(d => d.key === key ? Object.assign({}, d, patch) : d);
+  persist(); render();
+}
+function updTpl(id, patch, skipRender) {
+  state.templates = state.templates.map(t => t.id === id ? Object.assign({}, t, patch) : t);
+  persist();
+  if (!skipRender) render();
+}
+
+/* ─────────────── Import ─────────────── */
+
+function doImport() {
+  if (state.sim === 'unreachable') {
+    set({ banner: 'Unable to connect to Oracle PPM. The service could not be reached — please try again later.' });
+    return;
+  }
+  if (state.sim === 'empty') {
+    set({ banner: 'The Oracle PPM project PRJ-0048291 contains no material records to import.' });
+    return;
+  }
+  const n = state.importCount + 1;
+  const snap = getSnapshot(n);
+  const byKey = new Map(snap.map(s => [s.key, s]));
+  const existingKeys = new Set(state.devices.map(d => d.key));
+  const next = state.devices.map(d => {
+    if (d.manual) return d;
+    const s = byKey.get(d.key);
+    if (s) return Object.assign({}, d, { ppmQty: s.qty, omitted: false, isNew: false, qtyChanged: n > 1 && s.qty !== d.ppmQty });
+    return Object.assign({}, d, { omitted: true, isNew: false, qtyChanged: false });
+  });
+  for (const s of snap) {
+    if (!existingKeys.has(s.key)) {
+      next.push({
+        key: s.key, desc: s.desc, make: s.make, model: s.model, ppmQty: s.qty, suggested: s.suggested,
+        subclass: '', hidden: false, omitted: false, isNew: n > 1, qtyChanged: false,
+        manual: false, ovrOn: false
+      });
+    }
+  }
+  commit({ devices: next, importCount: n, lastImportAt: Date.now(), banner: null });
+  showToast('Imported ' + snap.length + ' material records from Oracle PPM.');
+}
+
+/* ─────────────── Templates ─────────────── */
+
+function addTemplate() {
+  const tpl = { id: 't' + Date.now(), ref: '', desc: '', parentSub: '', qty: 1, items: [], search: '' };
+  state.templates = state.templates.concat([tpl]);
+  state.expTpl[tpl.id] = true;
+  persist(); render();
+}
+function copyTemplate(src) {
+  const tpl = {
+    id: 't' + Date.now(), ref: '', desc: '', parentSub: src.parentSub, qty: 0, search: '',
+    items: src.items.map((it, i) => ({ iid: 'i' + Date.now() + '_' + i, deviceKey: it.deviceKey, friendly: it.friendly }))
+  };
+  const idx = state.templates.findIndex(t => t.id === src.id);
+  const templates = state.templates.slice();
+  templates.splice(idx + 1, 0, tpl);
+  state.templates = templates;
+  state.expTpl[tpl.id] = true;
+  persist(); render();
+  showToast('Template copied. Enter a new reference and description.');
+}
+function removeTpl(id) {
+  const ovr = {};
+  for (const k in state.ovr) if (!k.startsWith(id + ':')) ovr[k] = state.ovr[k];
+  state.templates = state.templates.filter(t => t.id !== id);
+  state.ovr = ovr;
+  persist(); render();
+}
+function addItem(tplId, deviceKey) {
+  const d = findDevice(deviceKey), t = findTpl(tplId);
+  if (!d || !t || !d.subclass) return;
+  const sameCount = t.items.filter(i => i.deviceKey === deviceKey).length;
+  const friendly = sameCount === 0 ? d.desc : d.desc + ' ' + (sameCount + 1);
+  const items = t.items.concat([{ iid: 'i' + Date.now() + Math.random().toString(36).slice(2, 6), deviceKey, friendly }]);
+  updTpl(tplId, { items, search: '' });
+}
+function moveItem(tplId, fromIid, toIid) {
+  const t = findTpl(tplId);
+  if (!t) return;
+  const items = t.items.slice();
+  const from = items.findIndex(i => i.iid === fromIid);
+  const to = items.findIndex(i => i.iid === toIid);
+  if (from < 0 || to < 0 || from === to) return;
+  const moved = items.splice(from, 1)[0];
+  items.splice(to, 0, moved);
+  updTpl(tplId, { items });
+}
+
+/* ─────────────── Validation + instances ─────────────── */
+
+function tplFlags(t) {
+  const all = state.templates;
+  const refDup = all.some(o => o.id !== t.id && norm(o.ref) === norm(t.ref) && norm(t.ref));
+  const descDup = all.some(o => o.id !== t.id && norm(o.desc) === norm(t.desc) && norm(t.desc));
+  const refEmpty = !norm(t.ref), descEmpty = !norm(t.desc);
+  const friendlies = t.items.map(i => norm(i.friendly));
+  const friendlyEmpty = friendlies.some(f => !f);
+  const friendlyDup = friendlies.some((f, i) => f && friendlies.indexOf(f) !== i);
+  const devs = t.items.map(i => findDevice(i.deviceKey));
+  const unavailable = devs.some(d => !d || d.omitted);
+  const missingSub = devs.some(d => d && !d.subclass);
+  const parentSubMissing = t.items.length > 0 && !t.parentSub;
+  const instanceBlocked = refDup || descDup || refEmpty || descEmpty || friendlyEmpty || friendlyDup;
+  return { refDup, descDup, refEmpty, descEmpty, friendlyEmpty, friendlyDup, unavailable, missingSub, parentSubMissing, instanceBlocked };
+}
+
+function deriveInstances() {
+  const out = [];
+  for (const t of state.templates) {
+    const f = tplFlags(t);
+    if (f.instanceBlocked || t.items.length === 0) continue;
+    const q = Number(t.qty) || 0;
+    for (let i = 0; i < q; i++) {
+      const k = t.id + ':' + i;
+      const o = state.ovr[k] || {};
+      out.push({
+        key: k, tpl: t, idx: i, flags: f,
+        gid: o.groupId != null ? o.groupId : t.ref + '-' + pad(i + 1, 2),
+        gname: o.groupName != null ? o.groupName : t.desc + ' ' + (i + 1)
+      });
+    }
+  }
+  return out;
+}
+
+function setOvrField(key, field, value) {
+  const o = Object.assign({}, state.ovr[key] || {});
+  o[field] = value;
+  state.ovr = Object.assign({}, state.ovr, { [key]: o });
+  persist(); render();
+}
+
+/* ─────────────── Rendering ─────────────── */
+
+const app = document.getElementById('app');
+
+function fmtImport(ts) {
+  if (!ts) return 'Not yet imported from Oracle PPM';
+  const d = new Date(ts);
+  return 'Last imported ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) +
+    ', ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+function sortArrow(st, col) { return st.col === col ? (st.dir === 1 ? ' \u25B2' : ' \u25BC') : ''; }
+
+// Searchable subclass dropdown (shared by device rows + template parent subclass)
+function ddHtml(ddId, current) {
+  const sf = norm(state.subFilter);
+  const matches = SUBCLASSES.filter(x => !sf || x.toLowerCase().includes(sf));
+  let opts = '<div class="dd-opt none" data-act="subpick" data-dd="' + esc(ddId) + '" data-val="">\u2014 none \u2014</div>';
+  for (const x of matches) {
+    opts += '<div class="dd-opt' + (x === current ? ' cur' : '') + '" data-act="subpick" data-dd="' + esc(ddId) + '" data-val="' + esc(x) + '">' + esc(x) + '</div>';
+  }
+  if (matches.length === 0) opts += '<div style="padding:5px 8px; color:#8f8f8f; font-size:11px;">No matches</div>';
+  return '<div class="dd-box" data-ddbox="1">' +
+    '<input class="dd-filter" data-in="subfilter" data-fk="subfilter" placeholder="Search subclasses\u2026" value="' + esc(state.subFilter) + '">' +
+    '<div style="max-height:150px; overflow:auto;">' + opts + '</div></div>';
+}
+
+function ddButton(ddId, current, missing) {
+  return '<button class="dd-btn' + (missing ? ' empty' : '') + '" data-act="subdd" data-dd="' + esc(ddId) + '">' +
+    '<span class="ellip" style="flex:1;">' + esc(current || '\u2014 assign \u2014') + '</span>' +
+    '<span style="color:#8f8f8f; font-size:9px;">\u25BE</span></button>' +
+    (state.subDD === ddId ? ddHtml(ddId, current) : '');
+}
+
+/* ── Section 1: Project Devices ── */
+function renderDevices() {
+  const s = state;
+  const q = norm(s.search);
+  const visible = s.devices.filter(d => {
+    if (d.hidden && !s.showHidden) return false;
+    if (!q) return true;
+    return (d.desc + ' ' + d.make + ' ' + d.model).toLowerCase().includes(q);
+  });
+  const sorted = visible.slice();
+  if (s.sort.col) {
+    const col = s.sort.col, dir = s.sort.dir;
+    const num = ['ppmQty', 'total', 'used', 'remaining'].includes(col);
+    const val = d => {
+      if (col === 'total') return totalQty(d);
+      if (col === 'used') return usedQty(d.key);
+      if (col === 'remaining') return totalQty(d) - usedQty(d.key);
+      if (col === 'ppmQty') return d.omitted ? 0 : Number(d.ppmQty) || 0;
+      return String(d[col] || '').toLowerCase();
+    };
+    sorted.sort((a, b) => {
+      const va = val(a), vb = val(b);
+      if (num) return (va - vb) * dir;
+      return va < vb ? -dir : va > vb ? dir : 0;
+    });
+  }
+
+  const headers = [
+    { label: 'Status' },
+    { label: 'Description', col: 'desc' },
+    { label: 'Make', col: 'make' },
+    { label: 'Model', col: 'model' },
+    { label: 'iTrac Subclass', col: 'subclass' },
+    { label: 'PPM Qty', col: 'ppmQty', align: 'right' },
+    { label: 'Override', align: 'center', title: 'Tick to allow used quantity to exceed the PPM quantity' },
+    { label: 'Total', col: 'total', align: 'right' },
+    { label: 'Used', col: 'used', align: 'right' },
+    { label: 'Remaining', col: 'remaining', align: 'right' },
+    { label: '' }
+  ];
+  let headHtml = '';
+  for (const h of headers) {
+    const align = h.align || 'left';
+    if (h.col) {
+      headHtml += '<div class="sort-h" data-act="sort" data-col="' + h.col + '" title="Sort by ' + esc(h.label) + '" ' +
+        'style="text-align:' + align + '; color:' + (s.sort.col === h.col ? '#054163' : '#666') + ';">' +
+        esc(h.label) + sortArrow(s.sort, h.col) + '</div>';
+    } else {
+      headHtml += '<div class="plain-h" title="' + esc(h.title || '') + '" style="text-align:' + align + ';">' + esc(h.label) + '</div>';
+    }
+  }
+
+  const negs = [];
+  let rowsHtml = '';
+  for (const d of sorted) {
+    const used = usedQty(d.key), total = totalQty(d), rem = total - used;
+    if (rem < 0 && !d.hidden && !d.ovrOn) negs.push(d.desc);
+    let chip = null, chipBg = '#f0f0f0', chipFg = '#666', accent = 'transparent';
+    if (d.manual) { chip = 'Non-PPM'; chipBg = '#f9e9e6'; chipFg = '#bf311a'; accent = '#bf311a'; }
+    else if (d.omitted) { chip = 'Not in PPM'; chipBg = '#ececec'; chipFg = '#8f8f8f'; }
+    else if (d.isNew) { chip = 'New'; chipBg = '#e6f2e6'; chipFg = '#107c10'; accent = '#107c10'; }
+    else if (d.qtyChanged) { chip = 'Qty updated'; chipBg = '#e7eefb'; chipFg = '#3e80ed'; accent = '#3e80ed'; }
+    if (d.hidden) { chip = 'Hidden'; chipBg = '#ececec'; chipFg = '#8f8f8f'; }
+    const remColor = rem < 0 ? (d.ovrOn ? '#b25000' : '#a80000') : rem === 0 ? '#8f8f8f' : '#107c10';
+    rowsHtml +=
+      '<div class="devgrid dev-row" style="background:' + (d.omitted || d.hidden ? '#fafafa' : '#fff') +
+      '; opacity:' + (d.omitted || d.hidden ? 0.55 : 1) + '; border-left:3px solid ' + accent + ';">' +
+      '<div style="padding:3px 8px;">' + (chip ? '<span class="chip" style="background:' + chipBg + '; color:' + chipFg + ';">' + esc(chip) + '</span>' : '') + '</div>' +
+      '<div style="padding:3px 8px; font-weight:' + (d.isNew ? 700 : 400) + '; color:#272727;">' + esc(d.desc) + '</div>' +
+      '<div style="padding:3px 8px; color:#666;">' + esc(d.make) + '</div>' +
+      '<div class="mono" style="padding:3px 8px; color:#666; font-size:11px;">' + esc(d.model) + '</div>' +
+      '<div style="padding:2px 6px; position:relative;">' + ddButton('dev:' + d.key, d.subclass, !d.subclass) + '</div>' +
+      '<div style="padding:3px 8px; text-align:right; color:' + (d.omitted ? '#8f8f8f' : '#424242') + '; text-decoration:' + (d.omitted ? 'line-through' : 'none') + ';">' + (d.omitted ? 0 : esc(d.ppmQty)) + '</div>' +
+      '<div style="padding:2px 6px; display:flex; align-items:center; justify-content:center;">' +
+        '<input type="checkbox" data-ch="ovr" data-key="' + esc(d.key) + '"' + (d.ovrOn ? ' checked' : '') + ' title="Allow used quantity to exceed the PPM quantity"></div>' +
+      '<div style="padding:3px 8px; text-align:right; font-weight:' + (d.qtyChanged ? 700 : 400) + '; color:#272727;">' + total + '</div>' +
+      '<div style="padding:3px 8px; text-align:right;">' + used + '</div>' +
+      '<div style="padding:3px 8px; text-align:right; font-weight:' + (rem < 0 ? 700 : 400) + '; color:' + remColor + ';">' + rem + '</div>' +
+      '<div style="padding:3px 8px; text-align:center;">' +
+        '<button class="hide-btn" data-act="hide" data-key="' + esc(d.key) + '" title="' + (d.hidden ? 'Restore to project configuration' : 'Hide from project configuration') + '">' + (d.hidden ? 'Unhide' : 'Hide') + '</button></div>' +
+      '</div>';
+  }
+
+  const hiddenCount = s.devices.filter(d => d.hidden).length;
+  const deviceCountLabel = s.devices.length ? visible.filter(d => !d.hidden).length + ' of ' + s.devices.length : '0';
+
+  let body;
+  if (s.devices.length > 0) {
+    body =
+      '<div style="max-height:320px; overflow:auto;" data-sc="dev">' +
+      '<div class="devgrid grid-head" style="position:sticky; top:0; z-index:3;">' + headHtml + '</div>' +
+      rowsHtml +
+      (visible.length === 0 ? '<div style="padding:16px; text-align:center; color:#8f8f8f;">No devices match \u201C' + esc(s.search) + '\u201D</div>' : '') +
+      '</div>' +
+      (negs.length ? '<div style="background:#fff4ce; border-top:1px solid #f0e3ab; color:#6b5d1f; padding:5px 12px; font-size:11.5px;">\u26A0\u00A0 Used quantity exceeds total available for: <b>' +
+        esc(negs.slice(0, 3).join(', ') + (negs.length > 3 ? ' +' + (negs.length - 3) + ' more' : '')) +
+        '</b>. Reduce assembly quantities, or tick Override to acknowledge the overage (Remaining will show a negative value).</div>' : '');
+  } else {
+    body =
+      '<div style="padding:36px; text-align:center;">' +
+      '<div style="font-size:13px; font-weight:500; color:#272727;">No devices imported yet</div>' +
+      '<div style="color:#666; margin-top:4px;">Import project material records from Oracle PPM to get started.</div>' +
+      '<button class="btn-primary" data-act="import" style="margin-top:14px; padding:7px 18px;">Import Devices</button></div>';
+  }
+
+  return '<div class="panel">' +
+    '<div class="panel-head">' +
+    '<span class="panel-title">1\u00A0\u00B7\u00A0Project Devices</span>' +
+    '<span class="count-pill">' + esc(deviceCountLabel) + '</span>' +
+    '<input class="txt" data-in="search" data-fk="search" placeholder="Search description, make or model\u2026" style="width:230px;" value="' + esc(s.search) + '">' +
+    '<label style="display:flex; align-items:center; gap:4px; color:#666; cursor:pointer;">' +
+      '<input type="checkbox" data-ch="showhidden"' + (s.showHidden ? ' checked' : '') + '>Show hidden (' + hiddenCount + ')</label>' +
+    '<div style="flex:1;"></div>' +
+    '<button class="btn-secondary" data-act="manual-open">+ Add non-PPM device</button>' +
+    '</div>' + body + '</div>';
+}
+
+/* ── Section 2: Assembly Templates ── */
+function renderTemplates() {
+  const s = state;
+  const tq = norm(s.tplSearch);
+  const tplVisible = tq ? s.templates.filter(t => ((t.ref || '') + ' ' + (t.desc || '')).toLowerCase().includes(tq)) : s.templates;
+
+  let rows = '';
+  for (const t of tplVisible) {
+    const f = tplFlags(t);
+    let error = null;
+    if (f.refEmpty) error = 'Reference required';
+    else if (f.refDup) error = 'Duplicate reference';
+    else if (f.descEmpty) error = 'Description required';
+    else if (f.descDup) error = 'Duplicate description';
+    else if (t.items.length === 0) error = 'Add at least one device';
+    else if (f.friendlyEmpty) error = 'Friendly description required';
+    else if (f.friendlyDup) error = 'Duplicate friendly description';
+    else if (f.unavailable) error = 'Contains device no longer in PPM';
+    else if (f.missingSub) error = 'Device missing subclass';
+    else if (f.parentSubMissing) error = 'Assign parent subclass';
+    const expanded = !!s.expTpl[t.id];
+
+    let itemsHtml = '';
+    if (expanded) {
+      let itemRows = '';
+      for (const it of t.items) {
+        const d = findDevice(it.deviceKey);
+        const total = d ? totalQty(d) : 0;
+        const rem = d ? total - usedQty(d.key) : 0;
+        const dup = t.items.some(o => o.iid !== it.iid && norm(o.friendly) === norm(it.friendly) && norm(it.friendly));
+        let flag = null, flagBg = 'transparent', flagFg = '#666';
+        if (d && d.manual) { flag = 'Non-PPM'; flagBg = '#f9e9e6'; flagFg = '#bf311a'; }
+        else if (d && d.omitted) { flag = 'Not in PPM'; flagBg = '#ececec'; flagFg = '#8f8f8f'; }
+        else if (d && !d.subclass) { flag = 'No subclass'; flagBg = '#fff4ce'; flagFg = '#6b5d1f'; }
+        const isOver = s.dragOver === it.iid;
+        itemRows +=
+          '<div class="itemgrid" draggable="true" data-drag-tpl="' + esc(t.id) + '" data-drag-iid="' + esc(it.iid) + '" ' +
+          'style="align-items:center; border-bottom:1px solid #f0f0f0; background:' + (isOver ? '#eef3f7' : 'transparent') + '; box-shadow:' + (isOver ? 'inset 0 2px 0 #054163' : 'none') + ';">' +
+          '<div class="drag-handle" title="Drag to reorder">\u22EE\u22EE</div>' +
+          '<div style="padding:2px 6px;"><input class="cell-input' + ((!norm(it.friendly) || dup) ? ' err' : '') + '" style="font-size:11.5px; padding:2px 5px;" ' +
+            'data-in="it-friendly" data-id="' + esc(t.id) + '" data-iid="' + esc(it.iid) + '" data-fk="fr:' + esc(it.iid) + '" placeholder="e.g. Reader in" value="' + esc(it.friendly) + '"></div>' +
+          '<div style="padding:2px 6px; color:#666; font-size:11.5px;">' + esc(d ? d.desc + ' \u2014 ' + d.make + ' ' + d.model : '(removed device)') +
+            (flag ? ' <span style="font-size:10px; font-weight:500; padding:0 5px; border-radius:8px; background:' + flagBg + '; color:' + flagFg + ';">' + esc(flag) + '</span>' : '') + '</div>' +
+          '<div style="padding:2px 6px; text-align:right; color:' + (rem < 0 ? '#a80000' : '#666') + '; font-weight:' + (rem < 0 ? 700 : 400) + ';">' + rem + '</div>' +
+          '<div style="text-align:center;"><button class="icon-btn del" data-act="it-del" data-id="' + esc(t.id) + '" data-iid="' + esc(it.iid) + '">\u2715</button></div>' +
+          '</div>';
+      }
+
+      // add-device picker
+      const pq = norm(t.search);
+      const pickerOpen = pq.length > 0;
+      let pickerHtml = '';
+      if (pickerOpen) {
+        const cand = s.devices.filter(d => !d.hidden && (d.desc + ' ' + d.make + ' ' + d.model).toLowerCase().includes(pq)).slice(0, 8);
+        let pr = '';
+        for (const d of cand) {
+          const ok = !!d.subclass && !d.omitted;
+          const rem = totalQty(d) - usedQty(d.key);
+          const note = !d.subclass ? 'assign subclass first' : d.omitted ? 'not in PPM' : 'remaining: ' + rem;
+          const noteColor = !ok ? '#a80000' : rem <= 0 ? '#bf311a' : '#107c10';
+          pr += '<div class="picker-row" ' + (ok ? 'data-act="pick-add" data-id="' + esc(t.id) + '" data-key="' + esc(d.key) + '" style="cursor:pointer;"' : 'style="cursor:not-allowed; opacity:.5;"') + '>' +
+            '<span style="color:#272727;">' + esc(d.desc) + '</span>' +
+            '<span style="color:#8f8f8f; font-size:10.5px;">' + esc(d.make + ' ' + d.model) + '</span>' +
+            '<span style="margin-left:auto; font-size:10.5px; color:' + noteColor + ';">' + esc(note) + '</span></div>';
+        }
+        if (cand.length === 0) pr = '<div style="padding:6px 8px; color:#8f8f8f; font-size:11px;">No matching devices</div>';
+        pickerHtml = '<div style="position:absolute; top:26px; left:0; right:0; background:#fff; border:1px solid #d5d8db; border-radius:3px; box-shadow:0 4px 12px rgba(0,0,0,.12); z-index:5; max-height:180px; overflow:auto;">' + pr + '</div>';
+      }
+
+      itemsHtml =
+        '<div style="background:#fafbfc; border-top:1px solid #f0f0f0; padding:6px 10px 8px 36px;">' +
+        '<div class="itemgrid" style="font-size:10px; font-weight:500; letter-spacing:.4px; text-transform:uppercase; color:#8f8f8f; padding-bottom:2px;">' +
+        '<div></div>' +
+        '<div style="padding:2px 6px; display:flex; align-items:center; gap:4px;">Friendly Description <span title="A short name for this component\u2019s role in the assembly (e.g. \u2018Reader in\u2019). It is appended to the Group Name to form each created device\u2019s name, e.g. \u2018A-GF-001 - Reader in\u2019." style="cursor:help; color:#3e80ed; text-transform:none;">\u24D8</span></div>' +
+        '<div style="padding:2px 6px;">Device</div>' +
+        '<div style="padding:2px 6px; text-align:right;">Remaining</div>' +
+        '<div></div></div>' +
+        itemRows +
+        '<div style="position:relative; margin-top:4px; width:340px;">' +
+        '<input class="add-search" data-in="tpl-search" data-id="' + esc(t.id) + '" data-fk="ts:' + esc(t.id) + '" placeholder="+ Search devices to add (description, make, model)\u2026" value="' + esc(t.search || '') + '">' +
+        pickerHtml + '</div></div>';
+    }
+
+    rows +=
+      '<div style="border-bottom:1px solid #f2f2f2;">' +
+      '<div class="tplgrid tpl-row">' +
+      '<div style="text-align:center; cursor:pointer; color:#8f8f8f; font-size:10px; padding:5px 0;" data-act="tpl-toggle" data-id="' + esc(t.id) + '">' + (expanded ? '\u25BC' : '\u25B6') + '</div>' +
+      '<div style="padding:2px 6px;"><input class="cell-input mono' + ((f.refEmpty || f.refDup) ? ' err' : '') + '" style="font-size:11px;" title="Click to edit reference" ' +
+        'data-in="tpl-ref" data-id="' + esc(t.id) + '" data-fk="ref:' + esc(t.id) + '" value="' + esc(t.ref) + '"></div>' +
+      '<div style="padding:2px 6px;"><input class="cell-input' + ((f.descEmpty || f.descDup) ? ' err' : '') + '" title="Click to edit description" ' +
+        'data-in="tpl-desc" data-id="' + esc(t.id) + '" data-fk="desc:' + esc(t.id) + '" value="' + esc(t.desc) + '"></div>' +
+      '<div style="padding:2px 6px; position:relative;">' + ddButton('tpl:' + t.id, t.parentSub, f.parentSubMissing) + '</div>' +
+      '<div style="padding:2px 6px;"><input type="number" min="0" class="cell-input" style="text-align:right;" title="Number of instances to create" ' +
+        'data-in="tpl-qty" data-id="' + esc(t.id) + '" data-fk="qty:' + esc(t.id) + '" value="' + esc(t.qty) + '"></div>' +
+      '<div style="padding:3px 8px; text-align:right; color:#666;">' + t.items.length + '</div>' +
+      '<div style="padding:3px 8px;">' +
+        (error ? '<span style="color:#a80000; font-size:11px;">\u26A0 ' + esc(error) + '</span>' : '<span style="color:#107c10; font-size:11px;">\u2713 Valid</span>') + '</div>' +
+      '<div style="display:flex; align-items:center; justify-content:center; gap:2px;">' +
+      '<button class="icon-btn" data-act="tpl-copy" data-id="' + esc(t.id) + '" title="Copy template (devices are kept; enter a new reference and description)">\u29C9</button>' +
+      '<button class="icon-btn del" data-act="tpl-del" data-id="' + esc(t.id) + '" title="Delete template" style="font-size:12px;">\u2715</button></div>' +
+      '</div>' + itemsHtml + '</div>';
+  }
+
+  const templateCount = tq ? tplVisible.length + ' of ' + s.templates.length : String(s.templates.length);
+  let body;
+  if (s.templates.length > 0) {
+    body =
+      '<div class="tplgrid grid-head">' +
+      '<div></div>' +
+      '<div style="padding:5px 8px;">Reference</div>' +
+      '<div style="padding:5px 8px;">Description</div>' +
+      '<div style="padding:5px 8px;">Parent Subclass</div>' +
+      '<div style="padding:5px 8px; text-align:right;">Instances</div>' +
+      '<div style="padding:5px 8px; text-align:right;">Devices</div>' +
+      '<div style="padding:5px 8px;">Status</div>' +
+      '<div></div></div>' + rows;
+  } else {
+    body = '<div style="padding:22px; text-align:center; color:#8f8f8f;">No assembly templates yet. Create a template (e.g. <i>Door Type 1 = 2\u00D7Reader, 1\u00D7Lock, 1\u00D7Contact</i>), then set how many instances you need.</div>';
+  }
+
+  return '<div class="panel">' +
+    '<div class="panel-head">' +
+    '<span class="panel-title">2\u00A0\u00B7\u00A0Assembly Templates</span>' +
+    '<span class="count-pill">' + esc(templateCount) + '</span>' +
+    '<input class="txt" data-in="tplsearch" data-fk="tplsearch" placeholder="Search reference or description\u2026" style="width:210px;" value="' + esc(s.tplSearch) + '">' +
+    '<div style="flex:1;"></div>' +
+    '<button class="btn-secondary" data-act="tpl-add">+ New template</button>' +
+    '</div>' + body + '</div>';
+}
+
+/* ── Section 3: Group Instances ── */
+function renderInstances(instances) {
+  const s = state;
+  const gidCounts = {};
+  for (const g of instances) { const k = norm(g.gid); gidCounts[k] = (gidCounts[k] || 0) + 1; }
+  const iq = norm(s.instSearch);
+  const instVisible = iq ? instances.filter(g => (String(g.gid) + ' ' + String(g.gname) + ' ' + g.tpl.ref).toLowerCase().includes(iq)) : instances;
+
+  const selKeys = instances.filter(g => s.selInst[g.key]).map(g => g.key);
+  const selCount = selKeys.length;
+  const allSelected = instances.length > 0 && selCount === instances.length;
+
+  let rows = '';
+  for (const g of instVisible) {
+    const expanded = !!s.expInst[g.key];
+    const dup = gidCounts[norm(g.gid)] > 1 && !!String(g.gid).trim();
+    const blank = !String(g.gid).trim();
+    const sel = !!s.selInst[g.key];
+
+    let childHtml = '';
+    if (expanded) {
+      let cr = '';
+      for (const it of g.tpl.items) {
+        const d = findDevice(it.deviceKey);
+        cr += '<div class="childgrid" style="align-items:center; border-bottom:1px solid #f0f0f0; font-size:11.5px;">' +
+          '<div style="padding:3px 6px; color:#272727;">' + esc(g.gname + ' - ' + it.friendly) + '</div>' +
+          '<div style="padding:3px 6px; color:#666;">' + esc(d ? (d.subclass || '\u2014') : '\u2014') + '</div>' +
+          '<div class="mono" style="padding:3px 6px; color:#8f8f8f; font-size:10.5px;">' + esc(d ? d.make + ' ' + d.model : '') + '</div></div>';
+      }
+      childHtml = '<div style="background:#fafbfc; border-top:1px solid #f0f0f0; padding:4px 10px 6px 46px;">' + cr + '</div>';
+    }
+
+    rows +=
+      '<div style="border-bottom:1px solid #f2f2f2;">' +
+      '<div class="instgrid inst-row" data-inst="' + esc(g.key) + '" style="background:' + (sel ? '#eef3f7' : 'transparent') + ';">' +
+      '<div style="display:flex; align-items:center; justify-content:center;"><input type="checkbox" data-ch="sel" data-key="' + esc(g.key) + '"' + (sel ? ' checked' : '') + '></div>' +
+      '<div style="text-align:center; cursor:pointer; color:#8f8f8f; font-size:10px; padding:5px 0;" data-act="inst-toggle" data-key="' + esc(g.key) + '">' + (expanded ? '\u25BC' : '\u25B6') + '</div>' +
+      '<div style="padding:2px 6px;"><input class="cell-input mono' + ((dup || blank) ? ' err' : '') + '" style="font-size:11px;" title="Click to override Group ID" ' +
+        'data-in="gid" data-key="' + esc(g.key) + '" data-fk="gid:' + esc(g.key) + '" value="' + esc(g.gid) + '"></div>' +
+      '<div style="padding:2px 6px;"><input class="cell-input" title="Click to override Group Name" ' +
+        'data-in="gname" data-key="' + esc(g.key) + '" data-fk="gn:' + esc(g.key) + '" value="' + esc(g.gname) + '"></div>' +
+      '<div style="padding:3px 8px;"><span class="mono" style="font-size:10.5px; background:#eef3f7; border-radius:3px; padding:1px 5px; color:#054163;">' + esc(g.tpl.ref) + '</span></div>' +
+      '<div style="padding:3px 8px; text-align:right; color:#666;">' + g.tpl.items.length + '</div>' +
+      '<div style="padding:3px 8px;">' +
+        (dup ? '<span style="color:#a80000; font-size:11px;">\u26A0 Duplicate Group ID</span>' : '') +
+        (blank ? '<span style="color:#a80000; font-size:11px;">\u26A0 Group ID required</span>' : '') + '</div>' +
+      '</div>' + childHtml + '</div>';
+  }
+
+  const instanceCount = iq ? instVisible.length + ' of ' + instances.length : String(instances.length);
+  let body;
+  if (instances.length > 0) {
+    body =
+      '<div style="max-height:300px; overflow:auto;" data-sc="inst">' +
+      '<div class="instgrid grid-head" style="position:sticky; top:0; z-index:2;">' +
+      '<div style="display:flex; align-items:center; justify-content:center;"><input type="checkbox" data-ch="selall"' + (allSelected ? ' checked' : '') + ' title="Select all instances"></div>' +
+      '<div></div>' +
+      '<div style="padding:5px 8px;">Group ID</div>' +
+      '<div style="padding:5px 8px;">Group Name</div>' +
+      '<div style="padding:5px 8px;">Template</div>' +
+      '<div style="padding:5px 8px; text-align:right;">Devices</div>' +
+      '<div style="padding:5px 8px;">Status</div></div>' +
+      rows + '</div>';
+  } else {
+    body = '<div style="padding:22px; text-align:center; color:#8f8f8f;">No group instances. Set an instance quantity on a valid assembly template and instances appear here with auto-generated Group IDs.</div>';
+  }
+
+  return '<div class="panel">' +
+    '<div class="panel-head">' +
+    '<span class="panel-title">3\u00A0\u00B7\u00A0Group Instances</span>' +
+    '<span class="count-pill">' + esc(instanceCount) + '</span>' +
+    '<input class="txt" data-in="instsearch" data-fk="instsearch" placeholder="Search Group ID or name\u2026" style="width:210px;" value="' + esc(s.instSearch) + '">' +
+    '<div style="flex:1;"></div>' +
+    '<span style="color:#8f8f8f; font-size:11px;">' + (selCount ? selCount + ' of ' + instances.length + ' selected' : '') + '</span>' +
+    '<button class="btn-secondary" data-act="ren-open"' + (selCount === 0 ? ' disabled' : '') + ' title="Select rows first (checkbox or right-click), then renumber only that selection" style="color:' + (selCount === 0 ? '#b5b5b5' : '#054163') + ';">' +
+    (selCount ? 'Renumber selected (' + selCount + ')' : 'Renumber selected') + '</button>' +
+    '</div>' + body + '</div>';
+}
+
+/* ── Section 4: Live Preview ── */
+function renderPreview(instances) {
+  const s = state;
+  const flat = [];
+  for (const g of instances) {
+    flat.push({ type: 'Parent', gid: g.gid, name: g.gname, sub: g.tpl.parentSub || '\u2014', src: 'Assembly: ' + g.tpl.ref });
+    for (const it of g.tpl.items) {
+      const d = findDevice(it.deviceKey);
+      flat.push({ type: 'Child', gid: g.gid, name: g.gname + ' - ' + it.friendly, sub: d ? (d.subclass || '\u2014') : '\u2014', src: d ? d.make + ' ' + d.model + (d.manual ? ' (non-PPM)' : '') : '' });
+    }
+  }
+  const pvq = norm(s.pvSearch);
+  const flatVisible = pvq ? flat.filter(r => (r.gid + ' ' + r.name + ' ' + r.sub + ' ' + r.type + ' ' + r.src).toLowerCase().includes(pvq)) : flat;
+  let flatSorted = flatVisible;
+  if (s.pvSort.col) {
+    const c = s.pvSort.col, dir = s.pvSort.dir;
+    flatSorted = flatVisible.slice().sort((a, b) => {
+      const va = String(a[c] || '').toLowerCase(), vb = String(b[c] || '').toLowerCase();
+      return va < vb ? -dir : va > vb ? dir : 0;
+    });
+  }
+
+  const headers = [
+    { label: '#', align: 'right' },
+    { label: 'Type', col: 'type' },
+    { label: 'Group ID', col: 'gid' },
+    { label: 'Device Name', col: 'name' },
+    { label: 'Subclass', col: 'sub' }
+  ];
+  let headHtml = '';
+  for (const h of headers) {
+    if (h.col) {
+      headHtml += '<div class="sort-h" data-act="pvsort" data-col="' + h.col + '" title="Sort preview by ' + esc(h.label) + '" ' +
+        'style="padding:5px 6px; color:' + (s.pvSort.col === h.col ? '#054163' : '#666') + ';">' + esc(h.label) + sortArrow(s.pvSort, h.col) + '</div>';
+    } else {
+      headHtml += '<div class="plain-h" style="padding:5px 6px; text-align:' + (h.align || 'left') + ';">' + esc(h.label) + '</div>';
+    }
+  }
+
+  const pageSize = Number(s.pageSize) || 10;
+  const pageCount = Math.max(1, Math.ceil(flatVisible.length / pageSize));
+  const page = Math.min(s.page, pageCount);
+  const pageRows = flatSorted.slice((page - 1) * pageSize, page * pageSize);
+  let rowsHtml = '';
+  pageRows.forEach((r, i) => {
+    rowsHtml += '<div class="pvgrid" title="' + esc(r.src) + '" style="align-items:center; border-bottom:1px solid #f2f2f2; background:' + (r.type === 'Parent' ? '#fbfcfd' : '#fff') + ';">' +
+      '<div style="padding:3px 6px; text-align:right; color:#8f8f8f; font-size:10.5px;">' + ((page - 1) * pageSize + i + 1) + '</div>' +
+      '<div style="padding:3px 6px;"><span style="font-size:9.5px; font-weight:500; padding:1px 5px; border-radius:9px; background:' + (r.type === 'Parent' ? '#dde8f0' : '#f0f0f0') + '; color:' + (r.type === 'Parent' ? '#054163' : '#666') + ';">' + r.type + '</span></div>' +
+      '<div class="mono ellip" style="padding:3px 6px; font-size:10.5px; color:#054163;">' + esc(r.gid) + '</div>' +
+      '<div class="ellip" style="padding:3px 6px; color:#272727; font-weight:' + (r.type === 'Parent' ? 500 : 400) + '; font-size:11.5px;">' + esc(r.name) + '</div>' +
+      '<div class="ellip" style="padding:3px 6px; color:#666; font-size:11px;">' + esc(r.sub) + '</div></div>';
+  });
+
+  const parents = instances.length, children = flat.length - parents;
+  const summary = flat.length
+    ? (pvq ? flatVisible.length + ' of ' + flat.length + ' devices' : flat.length + ' devices (' + parents + ' parents, ' + children + ' children)')
+    : 'Nothing to create yet';
+
+  const body = flatVisible.length > 0
+    ? '<div style="overflow:auto; flex:1;" data-sc="pv"><div class="pvgrid grid-head" style="font-size:10px; letter-spacing:.3px; position:sticky; top:0; z-index:2;">' + headHtml + '</div>' + rowsHtml + '</div>'
+    : '<div style="padding:22px; text-align:center; color:#8f8f8f;">Devices that will be created in iTrac appear here as you define group instances.</div>';
+
+  return '<div class="panel" style="position:sticky; top:10px; display:flex; flex-direction:column; max-height:calc(100vh - 130px); min-width:0;">' +
+    '<div style="display:flex; align-items:center; gap:8px; padding:6px 10px; border-bottom:1px solid #ececec; flex-wrap:wrap;">' +
+    '<span class="panel-title">4\u00A0\u00B7\u00A0Live Preview</span>' +
+    '<span style="color:#666; font-size:11px;">' + esc(summary) + '</span></div>' +
+    '<div style="display:flex; align-items:center; gap:8px; padding:5px 10px; border-bottom:1px solid #ececec;">' +
+    '<input class="txt" data-in="pvsearch" data-fk="pvsearch" placeholder="Search preview\u2026" style="flex:1; min-width:100px;" value="' + esc(s.pvSearch) + '">' +
+    '<select data-ch="pagesize" title="Page size" style="border:1px solid #d5d8db; border-radius:3px; padding:3px 4px; font-size:11.5px; background:#fff;">' +
+    [10, 25, 50].map(v => '<option value="' + v + '"' + (pageSize === v ? ' selected' : '') + '>' + v + '</option>').join('') + '</select>' +
+    '<div style="display:flex; align-items:center; gap:4px;">' +
+    '<button class="pg-btn" data-act="pv-prev">\u2039</button>' +
+    '<span style="color:#666; font-size:11.5px; min-width:48px; text-align:center;">' + page + ' / ' + pageCount + '</span>' +
+    '<button class="pg-btn" data-act="pv-next">\u203A</button></div></div>' +
+    body + '</div>';
+}
+
+/* ── Create bar + blockers ── */
+function renderCreateBar(instances) {
+  const s = state;
+  const gidCounts = {};
+  for (const g of instances) { const k = norm(g.gid); gidCounts[k] = (gidCounts[k] || 0) + 1; }
+  const dupGids = Object.keys(gidCounts).filter(k => k && gidCounts[k] > 1);
+  const blankGids = instances.filter(g => !String(g.gid).trim()).length;
+
+  let children = 0;
+  for (const g of instances) children += g.tpl.items.length;
+  const parents = instances.length;
+
+  const blockers = [];
+  if (parents === 0) blockers.push('No group instances defined');
+  for (const t of s.templates) {
+    const f = tplFlags(t);
+    const msgs = [];
+    if (f.refEmpty || f.descEmpty) msgs.push('missing reference/description');
+    if (f.refDup) msgs.push('duplicate reference');
+    if (f.descDup) msgs.push('duplicate description');
+    if (f.friendlyEmpty || f.friendlyDup) msgs.push('friendly descriptions incomplete');
+    if (f.unavailable) msgs.push('device no longer in PPM');
+    if (f.missingSub) msgs.push('device without subclass');
+    if (f.parentSubMissing) msgs.push('no parent subclass');
+    if (msgs.length) blockers.push((t.ref || 'Template') + ': ' + msgs.join(', '));
+  }
+  if (dupGids.length) blockers.push('Duplicate Group IDs: ' + dupGids.join(', ').toUpperCase());
+  if (blankGids) blockers.push(blankGids + ' instance(s) with a blank Group ID');
+  const disabled = blockers.length > 0;
+
+  return '<div style="position:fixed; left:0; right:0; bottom:0; background:#fff; border-top:1px solid #dcdfe2; box-shadow:0 -2px 8px rgba(0,0,0,.05); padding:8px 16px; display:flex; align-items:center; gap:14px; z-index:20;">' +
+    '<div style="flex:1; min-width:0;">' +
+    (disabled
+      ? '<div class="ellip" style="color:#a80000; font-size:11.5px;">\u26A0\u00A0 ' + esc(blockers.join('  \u00B7  ')) + '</div>'
+      : (parents > 0 ? '<div style="color:#107c10; font-size:11.5px;">\u2713\u00A0 All validations passed \u2014 ready to create.</div>' : '')) +
+    '</div>' +
+    '<div style="color:#666; font-size:11.5px;">' + parents + ' parents \u00B7 ' + children + ' children</div>' +
+    '<button class="btn-primary" data-act="create-open"' + (disabled ? ' disabled' : '') + ' style="padding:8px 22px; font-size:12.5px;">Create All</button>' +
+    '</div>';
+}
+
+/* ── Modals + toast ── */
+function renderModals(instances) {
+  const s = state;
+  let html = '';
+  const overlay = inner => '<div style="position:fixed; inset:0; background:rgba(39,39,39,.4); display:flex; align-items:center; justify-content:center; z-index:50;">' + inner + '</div>';
+
+  if (s.modal === 'manual') {
+    const m = s.manual;
+    html += overlay(
+      '<div data-ddbox="1" style="background:#fff; border-radius:6px; width:400px; padding:18px 20px; box-shadow:0 12px 40px rgba(0,0,0,.2);">' +
+      '<div style="font-size:14px; font-weight:500; color:#272727;">Add non-PPM device</div>' +
+      '<div style="color:#666; font-size:11.5px; margin-top:2px;">Manually defined devices are not tracked in Oracle PPM and are decorated separately.</div>' +
+      '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;">' +
+      '<label style="grid-column:1/3; display:flex; flex-direction:column; gap:2px; font-size:11px; color:#666;">Description' +
+      '<input class="modal-input" data-in="m-desc" data-fk="m-desc" value="' + esc(m.desc) + '"></label>' +
+      '<label style="display:flex; flex-direction:column; gap:2px; font-size:11px; color:#666;">Make' +
+      '<input class="modal-input" data-in="m-make" data-fk="m-make" value="' + esc(m.make) + '"></label>' +
+      '<label style="display:flex; flex-direction:column; gap:2px; font-size:11px; color:#666;">Model' +
+      '<input class="modal-input" data-in="m-model" data-fk="m-model" value="' + esc(m.model) + '"></label>' +
+      '<label style="display:flex; flex-direction:column; gap:2px; font-size:11px; color:#666;">Sub-class' +
+      '<select class="modal-input" data-ch="m-sub" style="background:#fff; padding:5px 6px;"><option value="">\u2014 select \u2014</option>' +
+      SUBCLASSES.map(x => '<option value="' + esc(x) + '"' + (m.subclass === x ? ' selected' : '') + '>' + esc(x) + '</option>').join('') +
+      '</select></label>' +
+      '<label style="display:flex; flex-direction:column; gap:2px; font-size:11px; color:#666;">Quantity' +
+      '<input type="number" min="1" class="modal-input" data-in="m-qty" data-fk="m-qty" value="' + esc(m.qty) + '"></label>' +
+      '</div>' +
+      (m.err ? '<div style="color:#a80000; font-size:11.5px; margin-top:8px;">\u26A0 ' + esc(m.err) + '</div>' : '') +
+      '<div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">' +
+      '<button class="btn-cancel" data-act="modal-x">Cancel</button>' +
+      '<button class="btn-modal-primary" data-act="manual-add">Add device</button></div></div>');
+  }
+
+  if (s.modal === 'override') {
+    const d = findDevice(s.ovrKey);
+    html += overlay(
+      '<div style="background:#fff; border-radius:6px; width:420px; padding:18px 20px; box-shadow:0 12px 40px rgba(0,0,0,.2);">' +
+      '<div style="font-size:14px; font-weight:500; color:#272727;">Enable quantity override?</div>' +
+      '<div style="background:#fff4ce; border:1px solid #f0e3ab; border-radius:4px; color:#6b5d1f; padding:8px 10px; font-size:11.5px; margin-top:10px; line-height:1.5;">\u26A0\u00A0 Overriding the PPM quantity may result in a mismatch between the quantity of assets registered in EAM and the project device quantity.</div>' +
+      '<div style="color:#424242; font-size:12px; margin-top:12px; line-height:1.6;">Allow <b>' + esc(d ? d.desc : '') + '</b> to be used beyond its PPM quantity of <b>' + (d ? (d.omitted ? 0 : esc(d.ppmQty)) : 0) + '</b>. No override amount is set \u2014 the Remaining column simply shows a negative value to communicate the overage.</div>' +
+      '<div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">' +
+      '<button class="btn-cancel" data-act="modal-x">Cancel</button>' +
+      '<button class="btn-danger" data-act="ovr-yes">Enable override</button></div></div>');
+  }
+
+  if (s.modal === 'renumber') {
+    const selCount = instances.filter(g => s.selInst[g.key]).length;
+    const startN = Number(s.ren.start) || 0;
+    const incN = Math.max(1, Number(s.ren.inc) || 1);
+    const renEx = n => String(s.ren.prefix || '') + pad(startN + n * incN, Number(s.ren.pad) || 3) + String(s.ren.suffix || '');
+    html += overlay(
+      '<div style="background:#fff; border-radius:6px; width:380px; padding:18px 20px; box-shadow:0 12px 40px rgba(0,0,0,.2);">' +
+      '<div style="font-size:14px; font-weight:500; color:#272727;">Renumber Group IDs</div>' +
+      '<div style="color:#666; font-size:11.5px; margin-top:2px;">Applies to the <b>' + selCount + ' selected</b> instance(s) only, in list order. Other rows keep their current Group IDs.</div>' +
+      '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px;">' +
+      '<label style="display:flex; flex-direction:column; gap:2px; font-size:11px; color:#666;">Prefix' +
+      '<input class="modal-input mono" data-in="ren-prefix" data-fk="ren-prefix" placeholder="e.g. A-GF-" value="' + esc(s.ren.prefix) + '"></label>' +
+      '<label style="display:flex; flex-direction:column; gap:2px; font-size:11px; color:#666;">Suffix' +
+      '<input class="modal-input mono" data-in="ren-suffix" data-fk="ren-suffix" placeholder="optional" value="' + esc(s.ren.suffix) + '"></label>' +
+      '<label style="display:flex; flex-direction:column; gap:2px; font-size:11px; color:#666;">Start at' +
+      '<input type="number" min="0" class="modal-input" data-in="ren-start" data-fk="ren-start" value="' + esc(s.ren.start) + '"></label>' +
+      '<label style="display:flex; flex-direction:column; gap:2px; font-size:11px; color:#666;">Increment' +
+      '<input type="number" min="1" class="modal-input" data-in="ren-inc" data-fk="ren-inc" value="' + esc(s.ren.inc) + '"></label>' +
+      '<label style="display:flex; flex-direction:column; gap:2px; font-size:11px; color:#666;">Digits' +
+      '<select class="modal-input" data-ch="ren-pad" style="background:#fff; padding:5px 6px;">' +
+      [[2, '2 (01)'], [3, '3 (001)'], [4, '4 (0001)']].map(([v, l]) => '<option value="' + v + '"' + (Number(s.ren.pad) === v ? ' selected' : '') + '>' + l + '</option>').join('') +
+      '</select></label></div>' +
+      '<div style="color:#8f8f8f; font-size:11px; margin-top:8px;">Preview: <span class="mono" style="color:#054163;">' + esc(renEx(0) + ', ' + renEx(1) + ', ' + renEx(2) + ' \u2026') + '</span></div>' +
+      '<div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">' +
+      '<button class="btn-cancel" data-act="modal-x">Cancel</button>' +
+      '<button class="btn-modal-primary" data-act="ren-apply">Renumber</button></div></div>');
+  }
+
+  if (s.modal === 'createAll') {
+    let children = 0;
+    for (const g of instances) children += g.tpl.items.length;
+    const parents = instances.length;
+    html += overlay(
+      '<div style="background:#fff; border-radius:6px; width:420px; padding:18px 20px; box-shadow:0 12px 40px rgba(0,0,0,.2);">' +
+      '<div style="font-size:14px; font-weight:500; color:#272727;">Create all devices in iTrac?</div>' +
+      '<div style="color:#424242; font-size:12px; margin-top:10px; line-height:1.6;">This will submit <b>' + parents + ' parent assembly devices</b> and <b>' + children + ' child devices</b> (' + (parents + children) + ' total) to the Bulk Add Device workflow.</div>' +
+      '<div style="background:#f6f6f6; border:1px solid #ececec; border-radius:4px; color:#666; padding:8px 10px; font-size:11.5px; margin-top:10px; line-height:1.5;">Afterwards, group instances and used/remaining totals are reset. Your device list and assembly templates are retained.</div>' +
+      '<div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">' +
+      '<button class="btn-cancel" data-act="modal-x">Cancel</button>' +
+      '<button class="btn-modal-primary" data-act="create-yes">Create All</button></div></div>');
+  }
+
+  if (s.toast) {
+    html += '<div style="position:fixed; right:16px; bottom:56px; background:#272727; color:#fff; border-left:3px solid ' +
+      (s.toast.kind === 'warn' ? '#e8a33d' : '#107c10') +
+      '; border-radius:4px; padding:9px 14px; font-size:12px; box-shadow:0 6px 20px rgba(0,0,0,.25); z-index:60; animation:toastIn .18s ease-out;">' + esc(s.toast.msg) + '</div>';
+  }
+  return html;
+}
+
+/* ── Full page ── */
+function render() {
+  const s = state;
+
+  // capture focus + caret + scroll positions before re-render
+  const active = document.activeElement;
+  const fk = active && active.dataset ? active.dataset.fk : null;
+  let selStart = null, selEnd = null;
+  if (fk) { try { selStart = active.selectionStart; selEnd = active.selectionEnd; } catch (e) {} }
+  const scrolls = {};
+  app.querySelectorAll('[data-sc]').forEach(el => { scrolls[el.dataset.sc] = el.scrollTop; });
+  const winY = window.scrollY;
+
+  const instances = deriveInstances();
+
+  let html = '<div style="min-height:100vh; display:flex; flex-direction:column;">';
+
+  // page header
+  html += '<div style="position:sticky; top:0; z-index:30; background:#ffffff; border-bottom:1px solid #ececec; padding:8px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">' +
+    '<div style="display:flex; align-items:center; gap:8px; flex:1;">' +
+    '<span style="font-size:17px; font-weight:500; color:#272727;">Asset Import Utility</span>' +
+    '</div><div style="display:flex; align-items:center; gap:8px;">' +
+    '<div style="text-align:right; font-size:11px; color:#666666;">' + esc(fmtImport(s.lastImportAt)) + '</div>' +
+    '<button class="btn-primary" data-act="import">Import Devices</button></div>' +
+    '</div>';
+
+  // error banner
+  if (s.banner) {
+    html += '<div style="background:#fdf3f3; border-bottom:1px solid #e5b9b9; color:#a80000; padding:7px 16px; display:flex; align-items:center; gap:8px;">' +
+      '<span style="font-weight:700;">\u26A0</span><span>' + esc(s.banner) + '</span><div style="flex:1;"></div>' +
+      '<button data-act="banner-x" style="background:none; border:none; color:#a80000; cursor:pointer; font-size:13px;">\u2715</button></div>';
+  }
+
+  if (s.noSubs) {
+    // launch guard (FR-063)
+    html += '<div style="flex:1; display:flex; align-items:center; justify-content:center; padding:40px;">' +
+      '<div style="background:#fff; border:1px solid #e7e7e7; border-radius:6px; padding:32px 40px; max-width:440px; text-align:center;">' +
+      '<div style="font-size:26px; color:#a80000;">\u26A0</div>' +
+      '<div style="font-size:14px; font-weight:500; color:#272727; margin-top:8px;">Project contains no device categories</div>' +
+      '<div style="color:#666666; margin-top:6px; line-height:1.5;">The Asset Import Utility requires at least one iTrac subclass. Add subclasses under Project Configuration, then relaunch the utility.</div>' +
+      '<button class="btn-primary" data-act="guard-back" style="margin-top:16px; padding:6px 16px;">Back to Manage Devices</button></div></div>';
+  } else {
+    html += '<div style="flex:1; padding:10px 16px 90px 16px; display:grid; grid-template-columns:minmax(0,1fr) minmax(400px,520px); gap:10px; align-items:start; width:100%;">' +
+      '<div style="display:flex; flex-direction:column; gap:10px; min-width:0;">' +
+      renderDevices() + renderTemplates() + renderInstances(instances) +
+      '</div>' +
+      renderPreview(instances) +
+      '</div>' +
+      renderCreateBar(instances);
+  }
+
+  html += renderModals(instances) + '</div>';
+  app.innerHTML = html;
+
+  // restore scroll + focus
+  app.querySelectorAll('[data-sc]').forEach(el => { if (scrolls[el.dataset.sc] != null) el.scrollTop = scrolls[el.dataset.sc]; });
+  window.scrollTo(0, winY);
+  if (fk) {
+    const el = app.querySelector('[data-fk="' + CSS.escape(fk) + '"]');
+    if (el) {
+      el.focus();
+      if (selStart != null) { try { el.setSelectionRange(selStart, selEnd); } catch (e) {} }
+    }
+  } else if (s.subDD) {
+    const f = app.querySelector('.dd-filter');
+    if (f) f.focus();
+  }
+}
+
+/* ─────────────── Events (delegated) ─────────────── */
+
+document.addEventListener('click', e => {
+  const actEl = e.target.closest('[data-act]');
+  const act = actEl ? actEl.dataset.act : null;
+  const insideDD = !!e.target.closest('[data-ddbox]');
+
+  if (act && !(actEl.disabled)) {
+    switch (act) {
+      case 'import': doImport(); break;
+      case 'banner-x': set({ banner: null }); break;
+      case 'guard-back': set({ noSubs: false }); break;
+      case 'prefill':
+        commit({ devices: state.devices.map(d => d.subclass ? d : Object.assign({}, d, { subclass: d.suggested || '' })) });
+        break;
+      case 'reset':
+        try { localStorage.removeItem(KEY); } catch (err) {}
+        set({ devices: [], templates: [], ovr: {}, importCount: 0, lastImportAt: null, expTpl: {}, expInst: {}, selInst: {}, page: 1, banner: null, toast: null });
+        break;
+      case 'sort': {
+        const col = actEl.dataset.col;
+        set({ sort: { col, dir: state.sort.col === col ? -state.sort.dir : 1 } });
+        break;
+      }
+      case 'pvsort': {
+        const col = actEl.dataset.col;
+        set({ pvSort: { col, dir: state.pvSort.col === col ? -state.pvSort.dir : 1 } });
+        break;
+      }
+      case 'subdd': {
+        const dd = actEl.dataset.dd;
+        set({ subDD: state.subDD === dd ? null : dd, subFilter: '' });
+        return; // don't fall through to the close-dropdown logic
+      }
+      case 'subpick': {
+        const dd = actEl.dataset.dd, val = actEl.dataset.val;
+        if (dd.startsWith('dev:')) updDevice(dd.slice(4), { subclass: val });
+        else if (dd.startsWith('tpl:')) updTpl(dd.slice(4), { parentSub: val }, true);
+        set({ subDD: null, subFilter: '' });
+        break;
+      }
+      case 'hide': {
+        const d = findDevice(actEl.dataset.key);
+        if (d) updDevice(d.key, { hidden: !d.hidden });
+        break;
+      }
+      case 'manual-open':
+        set({ modal: 'manual', manual: { desc: '', make: '', model: '', subclass: '', qty: 1, err: '' } });
+        break;
+      case 'manual-add': {
+        const m = state.manual;
+        if (!norm(m.desc) || !norm(m.make) || !norm(m.model) || !m.subclass) {
+          set({ manual: Object.assign({}, m, { err: 'Description, Make, Model, Sub-class and Quantity are all required.' }) });
+          break;
+        }
+        const dupe = state.devices.some(d => norm(d.desc) === norm(m.desc) && norm(d.make) === norm(m.make) && norm(d.model) === norm(m.model));
+        if (dupe) {
+          set({ manual: Object.assign({}, m, { err: 'A device with this Description, Make and Model already exists.' }) });
+          break;
+        }
+        const dev = {
+          key: 'm' + Date.now(), desc: m.desc.trim(), make: m.make.trim(), model: m.model.trim(),
+          ppmQty: Number(m.qty) || 1, subclass: m.subclass, suggested: m.subclass,
+          hidden: false, omitted: false, isNew: false, qtyChanged: false, manual: true, ovrOn: false
+        };
+        commit({ devices: state.devices.concat([dev]), modal: null });
+        showToast('Non-PPM device "' + dev.desc + '" added.');
+        break;
+      }
+      case 'ovr-yes':
+        updDevice(state.ovrKey, { ovrOn: true });
+        set({ modal: null });
+        showToast('Quantity override enabled. Remaining may now go negative.', 'warn');
+        break;
+      case 'tpl-add': addTemplate(); break;
+      case 'tpl-toggle': {
+        const id = actEl.dataset.id;
+        state.expTpl[id] = !state.expTpl[id];
+        render();
+        break;
+      }
+      case 'tpl-copy': { const t = findTpl(actEl.dataset.id); if (t) copyTemplate(t); break; }
+      case 'tpl-del': removeTpl(actEl.dataset.id); break;
+      case 'it-del': {
+        const t = findTpl(actEl.dataset.id);
+        if (t) updTpl(t.id, { items: t.items.filter(x => x.iid !== actEl.dataset.iid) });
+        break;
+      }
+      case 'pick-add': addItem(actEl.dataset.id, actEl.dataset.key); break;
+      case 'inst-toggle': {
+        const k = actEl.dataset.key;
+        state.expInst[k] = !state.expInst[k];
+        render();
+        break;
+      }
+      case 'ren-open': {
+        const selCount = Object.keys(state.selInst).filter(k => state.selInst[k]).length;
+        if (selCount) set({ modal: 'renumber' });
+        break;
+      }
+      case 'ren-apply': {
+        const instances = deriveInstances();
+        const startN = Number(state.ren.start) || 0;
+        const incN = Math.max(1, Number(state.ren.inc) || 1);
+        const padN = Number(state.ren.pad) || 3;
+        const renEx = n => String(state.ren.prefix || '') + pad(startN + n * incN, padN) + String(state.ren.suffix || '');
+        const ovr = Object.assign({}, state.ovr);
+        let n = 0;
+        for (const g of instances) {
+          if (!state.selInst[g.key]) continue;
+          ovr[g.key] = Object.assign({}, ovr[g.key] || {}, { groupId: renEx(n) });
+          n++;
+        }
+        commit({ ovr, modal: null, selInst: {} });
+        showToast(n + ' Group ID(s) renumbered.');
+        break;
+      }
+      case 'create-open': set({ modal: 'createAll' }); break;
+      case 'create-yes': {
+        const instances = deriveInstances();
+        let children = 0;
+        for (const g of instances) children += g.tpl.items.length;
+        const total = instances.length + children;
+        commit({
+          templates: state.templates.map(t => Object.assign({}, t, { qty: 0 })),
+          ovr: {}, expInst: {}, selInst: {}, page: 1, modal: null
+        });
+        showToast(total + ' devices submitted to the Bulk Add Device workflow. Group instances have been reset.');
+        break;
+      }
+      case 'pv-prev': set({ page: Math.max(1, state.page - 1) }); break;
+      case 'pv-next': {
+        // recompute page count from current filters
+        const instances = deriveInstances();
+        let flatLen = 0;
+        const pvq = norm(state.pvSearch);
+        for (const g of instances) {
+          const rows = [{ type: 'Parent', gid: g.gid, name: g.gname, sub: g.tpl.parentSub || '\u2014', src: 'Assembly: ' + g.tpl.ref }];
+          for (const it of g.tpl.items) {
+            const d = findDevice(it.deviceKey);
+            rows.push({ type: 'Child', gid: g.gid, name: g.gname + ' - ' + it.friendly, sub: d ? (d.subclass || '\u2014') : '\u2014', src: d ? d.make + ' ' + d.model : '' });
+          }
+          for (const r of rows) {
+            if (!pvq || (r.gid + ' ' + r.name + ' ' + r.sub + ' ' + r.type + ' ' + r.src).toLowerCase().includes(pvq)) flatLen++;
+          }
+        }
+        const pageCount = Math.max(1, Math.ceil(flatLen / (Number(state.pageSize) || 10)));
+        set({ page: Math.min(pageCount, state.page + 1) });
+        break;
+      }
+      case 'modal-x': set({ modal: null }); break;
+    }
+  }
+
+  // click-away closes the subclass dropdown
+  if (state.subDD && !insideDD && act !== 'subdd' && act !== 'subpick') {
+    set({ subDD: null, subFilter: '' });
+  }
+});
+
+document.addEventListener('input', e => {
+  const el = e.target.closest('[data-in]');
+  if (!el) return;
+  const v = el.value;
+  switch (el.dataset.in) {
+    case 'search': set({ search: v }); break;
+    case 'subfilter': set({ subFilter: v }); break;
+    case 'tplsearch': set({ tplSearch: v }); break;
+    case 'instsearch': set({ instSearch: v }); break;
+    case 'pvsearch': set({ pvSearch: v, page: 1 }); break;
+    case 'tpl-ref': updTpl(el.dataset.id, { ref: v }); break;
+    case 'tpl-desc': updTpl(el.dataset.id, { desc: v }); break;
+    case 'tpl-qty': updTpl(el.dataset.id, { qty: Math.max(0, Number(v) || 0) }); break;
+    case 'tpl-search': updTpl(el.dataset.id, { search: v }); break;
+    case 'it-friendly': {
+      const t = findTpl(el.dataset.id);
+      if (t) updTpl(t.id, { items: t.items.map(x => x.iid === el.dataset.iid ? Object.assign({}, x, { friendly: v }) : x) });
+      break;
+    }
+    case 'gid': setOvrField(el.dataset.key, 'groupId', v); break;
+    case 'gname': setOvrField(el.dataset.key, 'groupName', v); break;
+    case 'm-desc': state.manual.desc = v; render(); break;
+    case 'm-make': state.manual.make = v; render(); break;
+    case 'm-model': state.manual.model = v; render(); break;
+    case 'm-qty': state.manual.qty = Math.max(1, Number(v) || 1); render(); break;
+    case 'ren-prefix': state.ren.prefix = v; render(); break;
+    case 'ren-suffix': state.ren.suffix = v; render(); break;
+    case 'ren-start': state.ren.start = Math.max(0, Number(v) || 0); render(); break;
+    case 'ren-inc': state.ren.inc = Math.max(1, Number(v) || 1); render(); break;
+  }
+});
+
+document.addEventListener('change', e => {
+  const el = e.target.closest('[data-ch]');
+  if (!el) return;
+  switch (el.dataset.ch) {
+    case 'sim': set({ sim: el.value }); break;
+    case 'nosubs': set({ noSubs: el.checked }); break;
+    case 'showhidden': set({ showHidden: el.checked }); break;
+    case 'ovr': {
+      const d = findDevice(el.dataset.key);
+      if (!d) break;
+      if (d.ovrOn) updDevice(d.key, { ovrOn: false });
+      else set({ modal: 'override', ovrKey: d.key });
+      break;
+    }
+    case 'sel': {
+      const k = el.dataset.key;
+      state.selInst[k] = !state.selInst[k];
+      render();
+      break;
+    }
+    case 'selall': {
+      const instances = deriveInstances();
+      const selKeys = instances.filter(g => state.selInst[g.key]).length;
+      const all = instances.length > 0 && selKeys === instances.length;
+      const selInst = {};
+      if (!all) for (const g of instances) selInst[g.key] = true;
+      set({ selInst });
+      break;
+    }
+    case 'pagesize': commit({ pageSize: Number(el.value), page: 1 }); break;
+    case 'm-sub': state.manual.subclass = el.value; render(); break;
+    case 'ren-pad': state.ren.pad = Number(el.value); render(); break;
+  }
+});
+
+// right-click on an instance row → select it + open renumber
+document.addEventListener('contextmenu', e => {
+  const row = e.target.closest('[data-inst]');
+  if (!row) return;
+  e.preventDefault();
+  const k = row.dataset.inst;
+  if (!state.selInst[k]) state.selInst[k] = true;
+  set({ modal: 'renumber' });
+});
+
+// drag & drop reordering of template items
+let dragCtx = null;
+document.addEventListener('dragstart', e => {
+  const row = e.target.closest('[data-drag-iid]');
+  if (!row) return;
+  dragCtx = { tplId: row.dataset.dragTpl, iid: row.dataset.dragIid };
+  e.dataTransfer.effectAllowed = 'move';
+});
+document.addEventListener('dragover', e => {
+  const row = e.target.closest('[data-drag-iid]');
+  if (!row || !dragCtx) return;
+  e.preventDefault();
+  if (dragCtx.tplId === row.dataset.dragTpl && dragCtx.iid !== row.dataset.dragIid && state.dragOver !== row.dataset.dragIid) {
+    set({ dragOver: row.dataset.dragIid });
+  }
+});
+document.addEventListener('drop', e => {
+  const row = e.target.closest('[data-drag-iid]');
+  if (!row || !dragCtx) return;
+  e.preventDefault();
+  if (dragCtx.tplId === row.dataset.dragTpl) moveItem(dragCtx.tplId, dragCtx.iid, row.dataset.dragIid);
+  dragCtx = null;
+  set({ dragOver: null });
+});
+document.addEventListener('dragend', () => {
+  if (!dragCtx && state.dragOver == null) return;
+  dragCtx = null;
+  set({ dragOver: null });
+});
+
+render();
+</script>
+</body>
+</html>
