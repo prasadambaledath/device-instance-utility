@@ -1095,57 +1095,63 @@ function UtilityPage() {
               <span className="panel-title">4 · Live Preview</span>
               <span className="muted">{flatPreview.length ? `${flatPreview.length} devices` : 'Nothing to create yet'}</span>
             </div>
-            <div className="panel-head thin">
-              <input className="txt" placeholder="Search preview..." value={pvSearch} onChange={(e) => setPvSearch(e.target.value)} />
-              <select className="txt" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}>
-                {[10, 25, 50].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-              <button className="pg-btn" type="button" onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                ‹
-              </button>
-              <span className="muted">
-                {currentPage}/{pageCount}
-              </span>
-              <button className="pg-btn" type="button" onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>
-                ›
-              </button>
-            </div>
             <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th onClick={() => setPvSort((s) => ({ col: 'type', dir: s.col === 'type' ? -s.dir : 1 }))} className="sortable">
-                      Type{pvSort.col === 'type' ? (pvSort.dir === 1 ? ' ▲' : ' ▼') : ''}
-                    </th>
-                    <th onClick={() => setPvSort((s) => ({ col: 'gid', dir: s.col === 'gid' ? -s.dir : 1 }))} className="sortable">
-                      Group ID{pvSort.col === 'gid' ? (pvSort.dir === 1 ? ' ▲' : ' ▼') : ''}
-                    </th>
-                    <th onClick={() => setPvSort((s) => ({ col: 'name', dir: s.col === 'name' ? -s.dir : 1 }))} className="sortable">
-                      Device Name{pvSort.col === 'name' ? (pvSort.dir === 1 ? ' ▲' : ' ▼') : ''}
-                    </th>
-                    <th onClick={() => setPvSort((s) => ({ col: 'sub', dir: s.col === 'sub' ? -s.dir : 1 }))} className="sortable">
-                      Subclass{pvSort.col === 'sub' ? (pvSort.dir === 1 ? ' ▲' : ' ▼') : ''}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pageRows.map((r, i) => (
-                    <tr key={`${r.gid}-${r.name}-${i}`} className={r.type === 'Parent' ? 'pv-parent-row' : 'pv-child-row'}>
-                      <td className="num">{(currentPage - 1) * pageSize + i + 1}</td>
-                      <td>{r.type}</td>
-                      <td className="mono">{r.gid}</td>
-                      <td>{r.name}</td>
-                      <td>{r.sub}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {visiblePreview.length === 0 && <div className="empty-block">Nothing in preview.</div>}
+              {flatPreview.length > 0 ? (
+                <>
+                  <div className="panel-head thin">
+                    <input className="txt" placeholder="Search preview..." value={pvSearch} onChange={(e) => setPvSearch(e.target.value)} />
+                    <select className="txt" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}>
+                      {[10, 25, 50].map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                    <button className="pg-btn" type="button" onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                      ‹
+                    </button>
+                    <span className="muted">
+                      {currentPage}/{pageCount}
+                    </span>
+                    <button className="pg-btn" type="button" onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>
+                      ›
+                    </button>
+                  </div>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th onClick={() => setPvSort((s) => ({ col: 'type', dir: s.col === 'type' ? -s.dir : 1 }))} className="sortable">
+                          Type{pvSort.col === 'type' ? (pvSort.dir === 1 ? ' ▲' : ' ▼') : ''}
+                        </th>
+                        <th onClick={() => setPvSort((s) => ({ col: 'gid', dir: s.col === 'gid' ? -s.dir : 1 }))} className="sortable">
+                          Group ID{pvSort.col === 'gid' ? (pvSort.dir === 1 ? ' ▲' : ' ▼') : ''}
+                        </th>
+                        <th onClick={() => setPvSort((s) => ({ col: 'name', dir: s.col === 'name' ? -s.dir : 1 }))} className="sortable">
+                          Device Name{pvSort.col === 'name' ? (pvSort.dir === 1 ? ' ▲' : ' ▼') : ''}
+                        </th>
+                        <th onClick={() => setPvSort((s) => ({ col: 'sub', dir: s.col === 'sub' ? -s.dir : 1 }))} className="sortable">
+                          Subclass{pvSort.col === 'sub' ? (pvSort.dir === 1 ? ' ▲' : ' ▼') : ''}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pageRows.map((r, i) => (
+                        <tr key={`${r.gid}-${r.name}-${i}`} className={r.type === 'Parent' ? 'pv-parent-row' : 'pv-child-row'}>
+                          <td className="num">{(currentPage - 1) * pageSize + i + 1}</td>
+                          <td>{r.type}</td>
+                          <td className="mono">{r.gid}</td>
+                          <td>{r.name}</td>
+                          <td>{r.sub}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {visiblePreview.length === 0 && <div className="empty-block">Nothing in preview.</div>}
+                </>
+              ) : (
+                <div className="empty-block">Nothing in preview.</div>
+              )}
             </div>
           </section>
         </aside>
