@@ -600,8 +600,8 @@ function UtilityPage() {
     <div className="utility-v2-page">
       <Header />
 
-      <div className="utility-v2-header">
-        <div className="utility-v2-title">Device Instance Utility</div>
+      <div className="page-title-section">
+        <h1 className="page-title">Device Instance Utility</h1>
         <div className="utility-v2-header-right">
           <div className="utility-v2-import-stamp">{fmtImport(lastImportAt)}</div>
           <button className="btn-primary" type="button" onClick={doImport}>

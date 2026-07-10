@@ -17,12 +17,6 @@
   gap: 12px;
 }
 
-.utility-v2-title {
-  font-size: 18px;
-  font-weight: 400;
-  color: #555;
-}
-
 .utility-v2-header-right {
   display: flex;
   align-items: center;
@@ -42,13 +36,13 @@
   border-radius: 3px;
   font-size: 12px;
   cursor: pointer;
+  padding: 8px 16px;
 }
 
 .btn-primary {
   background: #054163;
   color: #fff;
   border: none;
-  padding: 7px 16px;
   font-weight: 500;
 }
 
@@ -65,8 +59,6 @@
   background: #fff;
   color: #054163;
   border: 1px solid #c8cdd2;
-  padding: 8px;
-  font-size: 11.5px;
 }
 
 .btn-secondary:disabled {
@@ -78,7 +70,6 @@
 .btn-cancel {
   background: #fff;
   border: 1px solid #c8cdd2;
-  padding: 6px 14px;
 }
 
 .btn-modal-primary {

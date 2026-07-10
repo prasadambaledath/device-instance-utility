@@ -65,8 +65,8 @@ function App() {
 
       <main className="sample-main">
         <section className="sample-card">
-          <div className="sample-card-head">
-            <h1>Audit (Doors & Inputs)</h1>
+          <div className="page-title-section">
+            <h1 className="page-title">Audit (Doors & Inputs)</h1>
           </div>
 
           <div className="sample-toolbar">
