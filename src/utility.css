@@ -272,7 +272,7 @@ tbody tr.selected {
   background: none;
   color: #8f8f8f;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .sub-dd-wrap {
@@ -387,6 +387,7 @@ tbody tr.selected {
   align-items: center;
   justify-content: center;
   gap: 2px;
+  margin-right: 10px;
 }
 
 .tpl-items {

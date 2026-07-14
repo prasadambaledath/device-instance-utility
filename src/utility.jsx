@@ -935,10 +935,11 @@ function UtilityPage() {
                         <div className="num" style={{ textAlign: 'center' }}>{t.items.length}</div>
                         <div>{error ? <span className="err-txt">⚠ {error}</span> : <span className="ok-txt">✓ Valid</span>}</div>
                         <div className="tpl-actions">
-                          <button className="icon-btn" type="button" onClick={() => copyTemplate(t)}>
+                          <button title="Copy template" className="icon-btn" type="button" onClick={() => copyTemplate(t)}>
                             ⧉
                           </button>
                           <button
+                            title="Delete template"
                             className="icon-btn del"
                             type="button"
                             onClick={() => {
