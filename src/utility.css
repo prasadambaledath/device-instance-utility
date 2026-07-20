@@ -105,6 +105,7 @@
 
 .utility-v2-layout {
   padding: 10px 16px 90px;
+  margin-top: 92px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(400px, 520px);
   gap: 10px;
@@ -274,7 +275,7 @@ tbody tr.selected {
   background: none;
   color: #8f8f8f;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .sub-dd-wrap {
@@ -442,6 +443,8 @@ tbody tr.selected {
   border-radius: 3px;
   overflow: auto;
   max-height: 180px;
+  margin-left: 32px;
+  max-width: 600px;
 }
 
 .picker-row {

@@ -25,6 +25,7 @@ body {
 
 #root {
   height: 100vh;
+  overflow: hidden;
 }
 
 .page-title-section {
@@ -36,6 +37,11 @@ body {
   gap: 12px;
   min-height: 50px;
   background: #fff;
+  position: fixed;
+  width: 100%;
+  left: 0;
+  top: 42px;
+  z-index: 99;
 }
 
 .page-title {

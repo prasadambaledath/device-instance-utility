@@ -163,6 +163,7 @@ function UtilityPage() {
   const [expInst, setExpInst] = useState({})
   const [subDD, setSubDD] = useState('')
   const [subFilter, setSubFilter] = useState('')
+  const [activeTplPickerId, setActiveTplPickerId] = useState('')
   const [dragCtx, setDragCtx] = useState(null)
   const [dragOverItem, setDragOverItem] = useState('')
 
@@ -861,11 +862,13 @@ function UtilityPage() {
                                       ? 'Assign parent subclass'
                                       : ''
                   const query = norm(t.search || '')
-                  const candidates = query
-                    ? devices
-                        .filter((d) => !d.hidden && `${d.desc} ${d.make} ${d.model}`.toLowerCase().includes(query))
-                        .slice(0, 8)
-                    : []
+                  const pickerOpen = activeTplPickerId === t.id
+                  const candidates = devices
+                    .filter((d) => !d.hidden)
+                    .filter((d) =>
+                      query ? `${d.desc} ${d.make} ${d.model}`.toLowerCase().includes(query) : true,
+                    )
+                    .slice(0, 8)
 
                   return (
                     <div key={t.id} className="tpl-card">
@@ -1020,10 +1023,19 @@ function UtilityPage() {
                             className="txt add-device-search"
                             placeholder="+ Search devices to add..."
                             value={t.search || ''}
-                            onChange={(e) => updTpl(t.id, { search: e.target.value })}
+                            onFocus={() => setActiveTplPickerId(t.id)}
+                            onChange={(e) => {
+                              setActiveTplPickerId(t.id)
+                              updTpl(t.id, { search: e.target.value })
+                            }}
+                            onBlur={() => {
+                              setTimeout(() => {
+                                setActiveTplPickerId((curr) => (curr === t.id ? '' : curr))
+                              }, 120)
+                            }}
                           />
-                          {!!query && (
-                            <div className="picker">
+                          {pickerOpen && (
+                            <div className="picker" onMouseDown={(e) => e.preventDefault()}>
                               {candidates.length === 0 && <div className="picker-row">No matching devices</div>}
                               {candidates.map((d) => {
                                 const ok = !!d.subclass && !d.omitted
@@ -1035,7 +1047,10 @@ function UtilityPage() {
                                     className="picker-row"
                                     type="button"
                                     disabled={!ok}
-                                    onClick={() => addItem(t.id, d.key)}
+                                    onClick={() => {
+                                      addItem(t.id, d.key)
+                                      setActiveTplPickerId('')
+                                    }}
                                   >
                                     <span>{d.desc}</span>
                                     <span className="muted">{`${d.make} ${d.model}`}</span>
