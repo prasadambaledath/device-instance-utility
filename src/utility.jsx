@@ -152,7 +152,7 @@ function UtilityPage() {
   const [selInst, setSelInst] = useState({})
 
   const [search, setSearch] = useState('')
-  const [showHidden, setShowHidden] = useState(false)
+  const [showHidden, setShowHidden] = useState(true)
   const [tplSearch, setTplSearch] = useState('')
   const [instSearch, setInstSearch] = useState('')
   const [pvSearch, setPvSearch] = useState('')
@@ -268,6 +268,7 @@ function UtilityPage() {
     setDevices(next)
     setImportCount(n)
     setLastImportAt(Date.now())
+    setShowHidden(true)
     setBanner('')
     showToast(`Imported ${snap.length} material records from Oracle PPM.`)
   }
