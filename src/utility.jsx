@@ -158,10 +158,6 @@ function UtilityPage() {
   const [pvSearch, setPvSearch] = useState('')
   const [sort, setSort] = useState({ col: null, dir: 1 })
   const [pvSort, setPvSort] = useState({ col: null, dir: 1 })
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(
-    () => Number(loadPersistedState()?.pageSize) || 10,
-  )
 
   const [expTpl, setExpTpl] = useState({})
   const [expInst, setExpInst] = useState({})
@@ -211,14 +207,13 @@ function UtilityPage() {
           ovr,
           importCount,
           lastImportAt,
-          pageSize,
         }),
       )
     } catch {
       // Ignore localStorage write failures.
       void 0
     }
-  }, [devices, templates, ovr, importCount, lastImportAt, pageSize])
+  }, [devices, templates, ovr, importCount, lastImportAt])
 
   const usedQty = (key) => {
     let used = 0
@@ -306,8 +301,6 @@ function UtilityPage() {
     setPvSearch('')
     setSort({ col: null, dir: 1 })
     setPvSort({ col: null, dir: 1 })
-    setPage(1)
-    setPageSize(10)
 
     setExpTpl({})
     setExpInst({})
@@ -475,8 +468,7 @@ function UtilityPage() {
     templates.length > 0 ||
     Object.keys(ovr).length > 0 ||
     importCount > 0 ||
-    !!lastImportAt ||
-    pageSize !== 10
+    !!lastImportAt
 
   const visibleTemplates = (() => {
     const q = norm(tplSearch)
@@ -504,9 +496,6 @@ function UtilityPage() {
     })
   })()
 
-  const pageCount = Math.max(1, Math.ceil(visiblePreview.length / pageSize))
-  const currentPage = Math.min(page, pageCount)
-  const pageRows = visiblePreview.slice((currentPage - 1) * pageSize, currentPage * pageSize)
   const subMatches = SUBCLASSES.filter((x) => !norm(subFilter) || x.toLowerCase().includes(norm(subFilter)))
 
   const selectedCount = instances.filter((g) => selInst[g.key]).length
@@ -590,7 +579,6 @@ function UtilityPage() {
     setOvr({})
     setExpInst({})
     setSelInst({})
-    setPage(1)
     setModal('')
     showToast(`${total} devices submitted to the Bulk Add Device workflow. Group instances have been reset.`)
   }
@@ -618,8 +606,14 @@ function UtilityPage() {
         <h1 className="page-title">Device Instance Utility</h1>
         <div className="utility-v2-header-right">
           <div className="utility-v2-import-stamp">{fmtImport(lastImportAt)}</div>
-          <button className="btn-primary" type="button" onClick={doImport}>
-            Import Devices
+          <button
+            className="btn-primary"
+            type="button"
+            onClick={doImport}
+            disabled={importCount === 0}
+            title={importCount === 0 ? 'Import materials first' : 'Refresh imported materials'}
+          >
+            Refresh Materials
           </button>
           <button
             className="btn-secondary"
@@ -646,7 +640,7 @@ function UtilityPage() {
         <div className="utility-v2-left">
           <section className="panel">
             <div className="panel-head">
-              <span className="panel-title">1 · Project Devices</span>
+              <span className="panel-title">1 · Project Materials</span>
               <span className="count-pill">{devices.length ? `${filteredDevices.filter((d) => !d.hidden).length} of ${devices.length}` : '0'}</span>
               <input className="txt" placeholder="Search description, make or model..." value={search} onChange={(e) => setSearch(e.target.value)} />
               <label className="chk-line">
@@ -662,7 +656,7 @@ function UtilityPage() {
                   setModal('manual')
                 }}
               >
-                + Add non-PPM device
+                + Add Non-PPM Device
               </button>
             </div>
             {devices.length > 0 ? (
@@ -811,7 +805,7 @@ function UtilityPage() {
                 <div>No devices imported yet</div>
                 <div>Import project material records from Oracle PPM to get started.</div>
                 <button className="btn-primary" type="button" onClick={doImport}>
-                  Import Devices
+                  Import Materials
                 </button>
               </div>
             )}
@@ -819,16 +813,16 @@ function UtilityPage() {
 
           <section className="panel">
             <div className="panel-head">
-              <span className="panel-title">2 · Assembly Templates</span>
+              <span className="panel-title">2 · Group Templates</span>
               <span className="count-pill">{tplSearch ? `${visibleTemplates.length} of ${templates.length}` : templates.length}</span>
               <input className="txt" placeholder="Search reference or description..." value={tplSearch} onChange={(e) => setTplSearch(e.target.value)} />
               <div className="spacer" />
               <button className="btn-secondary" type="button" onClick={addTemplate}>
-                + New template
+                + New Group
               </button>
             </div>
             {templates.length === 0 ? (
-              <div className="empty-block">No assembly templates yet.</div>
+              <div className="empty-block">No group templates yet.</div>
             ) : (
               <div className="templates-wrap">
                 <div className="tpl-row tpl-head">
@@ -1189,22 +1183,6 @@ function UtilityPage() {
                 <>
                   <div className="panel-head thin">
                     <input className="txt" placeholder="Search preview..." value={pvSearch} onChange={(e) => setPvSearch(e.target.value)} />
-                    <select className="txt" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1) }}>
-                      {[10, 25, 50].map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                        </option>
-                      ))}
-                    </select>
-                    <button className="pg-btn" type="button" onClick={() => setPage((p) => Math.max(1, p - 1))}>
-                      ‹
-                    </button>
-                    <span className="muted">
-                      {currentPage}/{pageCount}
-                    </span>
-                    <button className="pg-btn" type="button" onClick={() => setPage((p) => Math.min(pageCount, p + 1))}>
-                      ›
-                    </button>
                   </div>
                   <table>
                     <thead>
@@ -1225,9 +1203,9 @@ function UtilityPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {pageRows.map((r, i) => (
+                      {visiblePreview.map((r, i) => (
                         <tr key={`${r.gid}-${r.name}-${i}`} className={r.type === 'Parent' ? 'pv-parent-row' : 'pv-child-row'}>
-                          <td className="num">{(currentPage - 1) * pageSize + i + 1}</td>
+                          <td className="num">{i + 1}</td>
                           <td>{r.type}</td>
                           <td className="mono">{r.gid}</td>
                           <td>{r.name}</td>

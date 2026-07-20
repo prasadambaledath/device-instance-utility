@@ -117,6 +117,8 @@
   flex-direction: column;
   gap: 15px;
   min-width: 0;
+  height: calc(100vh - 160px);
+  overflow: auto;
 }
 
 .panel {
@@ -513,19 +515,6 @@ tbody tr.selected {
 
 .preview-panel .txt {
   min-width: 300px;
-}
-
-.preview-panel select.txt {
-  min-width: 40px;
-}
-
-.pg-btn {
-  background: #fff;
-  border: 1px solid #d5d8db;
-  border-radius: 3px;
-  padding: 8px;
-  cursor: pointer;
-  color: #054163;
 }
 
 .create-bar {
