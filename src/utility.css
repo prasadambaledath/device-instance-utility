@@ -319,6 +319,11 @@ tbody tr.selected {
   z-index: 30;
 }
 
+.dd-box.open-up {
+  top: auto;
+  bottom: calc(100% + 2px);
+}
+
 .dd-filter {
   width: calc(100% - 12px);
   margin: 6px;

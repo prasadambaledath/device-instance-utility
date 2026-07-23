@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import Header from './Header.jsx'
 import './utility.css'
 
@@ -163,9 +163,12 @@ function UtilityPage() {
   const [expInst, setExpInst] = useState({})
   const [subDD, setSubDD] = useState('')
   const [subFilter, setSubFilter] = useState('')
+  const [subDDOpenUp, setSubDDOpenUp] = useState(false)
+  const [subDDListMaxHeight, setSubDDListMaxHeight] = useState(170)
   const [activeTplPickerId, setActiveTplPickerId] = useState('')
   const [dragCtx, setDragCtx] = useState(null)
   const [dragOverItem, setDragOverItem] = useState('')
+  const devicesTableWrapRef = useRef(null)
 
   const [toast, setToast] = useState(null)
   const [banner, setBanner] = useState('')
@@ -446,10 +449,9 @@ function UtilityPage() {
     let arr = devices.filter((d) => (showHidden ? true : !d.hidden))
     if (q) arr = arr.filter((d) => `${d.desc} ${d.make} ${d.model}`.toLowerCase().includes(q))
     if (!sort.col) return arr
-    const numCols = ['ppmQty', 'total', 'used', 'remaining']
+    const numCols = ['ppmQty', 'used', 'remaining']
     return [...arr].sort((a, b) => {
       const value = (d) => {
-        if (sort.col === 'total') return totalQty(d)
         if (sort.col === 'used') return usedQty(d.key)
         if (sort.col === 'remaining') return totalQty(d) - usedQty(d.key)
         if (sort.col === 'ppmQty') return d.omitted ? 0 : Number(d.ppmQty) || 0
@@ -663,7 +665,7 @@ function UtilityPage() {
             </div>
             {devices.length > 0 ? (
               <>
-                <div className="table-wrap">
+                <div className="table-wrap" ref={devicesTableWrapRef}>
                   <table>
                     <thead>
                       <tr>
@@ -675,7 +677,6 @@ function UtilityPage() {
                           ['iTrac Subclass', 'subclass'],
                           ['PPM Qty', 'ppmQty'],
                           ['Override', null],
-                          ['Total', 'total'],
                           ['Used', 'used'],
                           ['Remaining', 'remaining'],
                           ['', null],
@@ -711,8 +712,34 @@ function UtilityPage() {
                                 <button
                                   className={`dd-btn ${!d.subclass ? 'empty' : ''}`}
                                   type="button"
-                                  onClick={() => {
-                                    setSubDD((curr) => (curr === `dev:${d.key}` ? '' : `dev:${d.key}`))
+                                  onClick={(e) => {
+                                    const nextDD = subDD === `dev:${d.key}` ? '' : `dev:${d.key}`
+                                    if (!nextDD) {
+                                      setSubDD('')
+                                      setSubDDOpenUp(false)
+                                      setSubDDListMaxHeight(170)
+                                      setSubFilter('')
+                                      return
+                                    }
+                                    const wrapRect = devicesTableWrapRef.current?.getBoundingClientRect()
+                                    const btnRect = e.currentTarget.getBoundingClientRect()
+                                    const estimatedDropdownHeight = 220
+                                    const spaceBelow = wrapRect
+                                      ? wrapRect.bottom - btnRect.bottom
+                                      : window.innerHeight - btnRect.bottom
+                                    const spaceAbove = wrapRect
+                                      ? btnRect.top - wrapRect.top
+                                      : btnRect.top
+                                    const openUp =
+                                      spaceBelow < estimatedDropdownHeight && spaceAbove > spaceBelow
+                                    setSubDDOpenUp(openUp)
+                                    const availableSpace = openUp ? spaceAbove : spaceBelow
+                                    const computedMaxHeight = Math.max(
+                                      90,
+                                      Math.min(220, Math.floor(availableSpace - 44)),
+                                    )
+                                    setSubDDListMaxHeight(computedMaxHeight)
+                                    setSubDD(nextDD)
                                     setSubFilter('')
                                   }}
                                 >
@@ -720,14 +747,14 @@ function UtilityPage() {
                                   <span className="dd-caret">▾</span>
                                 </button>
                                 {subDD === `dev:${d.key}` && (
-                                  <div className="dd-box" data-ddbox="1">
+                                  <div className={`dd-box ${subDDOpenUp ? 'open-up' : ''}`} data-ddbox="1">
                                     <input
                                       className="dd-filter"
                                       placeholder="Search subclasses..."
                                       value={subFilter}
                                       onChange={(e) => setSubFilter(e.target.value)}
                                     />
-                                    <div className="dd-list">
+                                    <div className="dd-list" style={{ maxHeight: `${subDDListMaxHeight}px` }}>
                                       <button
                                         className={`dd-opt ${!d.subclass ? 'cur' : ''}`}
                                         type="button"
@@ -773,7 +800,6 @@ function UtilityPage() {
                                 }}
                               />
                             </td>
-                            <td className="num" width="40">{total}</td>
                             <td className="num" width="40">{used}</td>
                             <td className={`num ${rem < 0 ? 'neg' : ''}`} width="40">{rem}</td>
                             <td className="num">
